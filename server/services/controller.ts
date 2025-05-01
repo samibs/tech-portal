@@ -306,7 +306,13 @@ export async function restartApp(app: ReplitApp): Promise<AppControlResult> {
         lastChecked: new Date()
       });
       
-      // Start the app
+      // Start the app (making sure we don't pass undefined)
+      if (!updatedApp) {
+        return {
+          success: false,
+          error: `Failed to update app status to ${AppStatus.STOPPED}`
+        };
+      }
       const startResult = await startApp(updatedApp);
       if (!startResult.success) {
         return {

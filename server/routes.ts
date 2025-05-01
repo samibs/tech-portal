@@ -135,9 +135,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const result = await startApp(app);
       if (result.success) {
-        res.json({ message: "App started successfully", app: result.app });
+        res.json({ 
+          message: "App start simulation successful", 
+          app: result.app,
+          simulation: true,
+          details: "Note: This is a simulation of app control. In a production environment, this would connect to the actual Replit API."
+        });
       } else {
-        res.status(500).json({ message: result.error || "Failed to start app" });
+        res.status(500).json({ 
+          message: result.error || "Failed to start app", 
+          simulation: true
+        });
       }
     } catch (error) {
       console.error("Error starting app:", error);
@@ -160,9 +168,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const result = await stopApp(app);
       if (result.success) {
-        res.json({ message: "App stopped successfully", app: result.app });
+        res.json({ 
+          message: "App stop simulation successful", 
+          app: result.app,
+          simulation: true,
+          details: "Note: This is a simulation of app control. In a production environment, this would connect to the actual Replit API."
+        });
       } else {
-        res.status(500).json({ message: result.error || "Failed to stop app" });
+        res.status(500).json({ 
+          message: result.error || "Failed to stop app",
+          simulation: true
+        });
       }
     } catch (error) {
       console.error("Error stopping app:", error);
@@ -185,9 +201,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const result = await restartApp(app);
       if (result.success) {
-        res.json({ message: "App restarted successfully", app: result.app });
+        res.json({ 
+          message: "App restart simulation successful", 
+          app: result.app,
+          simulation: true,
+          details: "Note: This is a simulation of app control. In a production environment, this would connect to the actual Replit API."
+        });
       } else {
-        res.status(500).json({ message: result.error || "Failed to restart app" });
+        res.status(500).json({ 
+          message: result.error || "Failed to restart app",
+          simulation: true
+        });
       }
     } catch (error) {
       console.error("Error restarting app:", error);

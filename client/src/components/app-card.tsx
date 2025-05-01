@@ -20,10 +20,12 @@ export default function AppCard({ app, onStatusChange }: AppCardProps) {
   const handleStart = async () => {
     setIsLoading(true);
     try {
-      await startApp(app.id);
+      const response = await startApp(app.id);
       toast({
-        title: "Application Started",
-        description: `${app.name} is now running.`,
+        title: "Application Start Simulated",
+        description: response.simulation 
+          ? `${app.name} status set to running. (Simulation)`
+          : `${app.name} is now running.`,
       });
       onStatusChange();
     } catch (error) {
@@ -40,10 +42,12 @@ export default function AppCard({ app, onStatusChange }: AppCardProps) {
   const handleStop = async () => {
     setIsLoading(true);
     try {
-      await stopApp(app.id);
+      const response = await stopApp(app.id);
       toast({
-        title: "Application Stopped",
-        description: `${app.name} has been stopped.`,
+        title: "Application Stop Simulated",
+        description: response.simulation 
+          ? `${app.name} status set to stopped. (Simulation)`
+          : `${app.name} has been stopped.`,
         variant: "default",
       });
       onStatusChange();
@@ -61,10 +65,12 @@ export default function AppCard({ app, onStatusChange }: AppCardProps) {
   const handleRestart = async () => {
     setIsLoading(true);
     try {
-      await restartApp(app.id);
+      const response = await restartApp(app.id);
       toast({
-        title: "Application Restarted",
-        description: `${app.name} has been restarted.`,
+        title: "Application Restart Simulated",
+        description: response.simulation 
+          ? `${app.name} has been simulated to restart. (Simulation)`
+          : `${app.name} has been restarted.`,
       });
       onStatusChange();
     } catch (error) {
