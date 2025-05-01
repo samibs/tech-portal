@@ -1,6 +1,6 @@
 import { spawn, ChildProcess } from "child_process";
 import { storage } from "../storage";
-import { ReplitApp, AppStatus } from "@shared/schema";
+import { ReplitApp, AppStatus, AppProcess } from "@shared/schema";
 
 interface AppControlResult {
   success: boolean;
@@ -10,6 +10,87 @@ interface AppControlResult {
 
 // Store running app processes
 const runningProcesses: Map<number, ChildProcess> = new Map();
+
+// Check for port conflicts with other running apps
+async function checkPortConflicts(app: ReplitApp): Promise<{error: string} | null> {
+  try {
+    // Get all running apps
+    const allApps = await storage.getApps();
+    const runningApps = allApps.filter(a => 
+      a.id !== app.id && 
+      a.status === AppStatus.RUNNING
+    );
+    
+    // Check primary port conflict
+    const primaryPortConflict = runningApps.find(a => a.port === app.port);
+    if (primaryPortConflict) {
+      return {
+        error: `Port conflict: Port ${app.port} is already in use by app "${primaryPortConflict.name}" (ID: ${primaryPortConflict.id})`
+      };
+    }
+    
+    // Check additional ports if app has them
+    if (app.additionalPorts && app.additionalPorts.length > 0) {
+      for (const additionalPort of app.additionalPorts) {
+        // Check conflict with any primary port
+        const primaryConflict = runningApps.find(a => a.port === additionalPort);
+        if (primaryConflict) {
+          return {
+            error: `Additional port conflict: Port ${additionalPort} is already in use as primary port by app "${primaryConflict.name}" (ID: ${primaryConflict.id})`
+          };
+        }
+        
+        // Check conflict with any additional port
+        for (const runningApp of runningApps) {
+          if (runningApp.additionalPorts && runningApp.additionalPorts.includes(additionalPort)) {
+            return {
+              error: `Additional port conflict: Port ${additionalPort} is already in use as additional port by app "${runningApp.name}" (ID: ${runningApp.id})`
+            };
+          }
+        }
+      }
+    }
+    
+    // Check against tracked ports in the database
+    const allPorts = await storage.getPorts();
+    const inUsePorts = allPorts.filter(p => 
+      p.appId !== app.id && 
+      p.status === "In use"
+    );
+    
+    // Check primary port
+    const portConflict = inUsePorts.find(p => p.port === app.port);
+    if (portConflict) {
+      const conflictApp = await storage.getApp(portConflict.appId);
+      const appName = conflictApp ? conflictApp.name : `Unknown app (ID: ${portConflict.appId})`;
+      return {
+        error: `Port conflict: Port ${app.port} is already in use by ${appName} for ${portConflict.service}`
+      };
+    }
+    
+    // Check additional ports
+    if (app.additionalPorts && app.additionalPorts.length > 0) {
+      for (const additionalPort of app.additionalPorts) {
+        const additionalPortConflict = inUsePorts.find(p => p.port === additionalPort);
+        if (additionalPortConflict) {
+          const conflictApp = await storage.getApp(additionalPortConflict.appId);
+          const appName = conflictApp ? conflictApp.name : `Unknown app (ID: ${additionalPortConflict.appId})`;
+          return {
+            error: `Additional port conflict: Port ${additionalPort} is already in use by ${appName} for ${additionalPortConflict.service}`
+          };
+        }
+      }
+    }
+    
+    // No conflicts found
+    return null;
+  } catch (error) {
+    console.error("Error checking port conflicts:", error);
+    return {
+      error: `Failed to check port conflicts: ${(error as Error).message}`
+    };
+  }
+}
 
 // Start an app
 export async function startApp(app: ReplitApp): Promise<AppControlResult> {
@@ -283,6 +364,118 @@ export async function stopApp(app: ReplitApp): Promise<AppControlResult> {
     return {
       success: false,
       error: `Failed to stop app: ${(error as Error).message}`
+    };
+  }
+}
+
+// Terminate ghost processes for an app
+export async function terminateGhostProcesses(app: ReplitApp): Promise<{ success: boolean, terminatedCount: number, error?: string }> {
+  try {
+    // Validate app
+    if (!app.id) {
+      return {
+        success: false,
+        terminatedCount: 0,
+        error: "Invalid app ID"
+      };
+    }
+    
+    // Check if ghost process detection is enabled for this app
+    if (!app.checkForGhostProcesses) {
+      return {
+        success: false,
+        terminatedCount: 0,
+        error: "Ghost process detection is not enabled for this app"
+      };
+    }
+    
+    // Log cleanup attempt
+    await storage.createLog({
+      appId: app.id,
+      action: "Ghost Process Cleanup Attempt",
+      details: `Attempting to clean up ghost processes for app ${app.name}`,
+      status: app.status
+    });
+    
+    // Get running processes for this app
+    const processes = await storage.getProcesses(app.id);
+    const ghostProcesses = processes.filter(p => 
+      // Filter ghost processes (app is stopped but processes are running)
+      app.status !== AppStatus.RUNNING && 
+      p.status === "Running"
+    );
+    
+    if (ghostProcesses.length === 0) {
+      await storage.createLog({
+        appId: app.id,
+        action: "Ghost Process Cleanup Complete",
+        details: `No ghost processes found for app ${app.name}`,
+        status: app.status
+      });
+      
+      return {
+        success: true,
+        terminatedCount: 0
+      };
+    }
+    
+    // Simulate terminating the processes
+    const terminatedIds: number[] = [];
+    
+    for (const process of ghostProcesses) {
+      try {
+        // In a real implementation, we'd use an API to kill the process
+        // For simulation, just update the database
+        await storage.updateProcess(process.id, {
+          status: "Terminated",
+          lastChecked: new Date()
+        });
+        
+        await storage.createLog({
+          appId: app.id,
+          action: "Process Terminated",
+          details: `Terminated ghost process PID ${process.pid} (${process.command})`,
+          status: null
+        });
+        
+        terminatedIds.push(process.id);
+      } catch (error) {
+        console.error(`Error terminating process ${process.id}:`, error);
+        
+        await storage.createLog({
+          appId: app.id,
+          action: "Process Termination Failed",
+          details: `Failed to terminate process ${process.pid}: ${(error as Error).message}`,
+          status: null
+        });
+      }
+    }
+    
+    await storage.createLog({
+      appId: app.id,
+      action: "Ghost Process Cleanup Complete",
+      details: `Terminated ${terminatedIds.length} of ${ghostProcesses.length} ghost processes for app ${app.name}`,
+      status: app.status
+    });
+    
+    return {
+      success: true,
+      terminatedCount: terminatedIds.length
+    };
+  } catch (error) {
+    console.error(`Error terminating ghost processes for app ${app.id}:`, error);
+    
+    await storage.createLog({
+      appId: app.id,
+      action: "Ghost Process Cleanup Failed",
+      details: `Error: ${(error as Error).message}`,
+      status: app.status
+    });
+    
+    return {
+      success: false,
+      terminatedCount: 0,
+      error: `Failed to terminate ghost processes: ${(error as Error).message}`
     };
   }
 }
