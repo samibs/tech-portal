@@ -278,3 +278,12 @@ export async function terminateGhostProcesses(appId: number) {
   });
   return res.json();
 }
+
+// Email API
+export async function sendTestEmail(email: string) {
+  const res = await apiRequest("/api/email/test", {
+    method: "POST",
+    data: { email }
+  });
+  return res.json();
+}

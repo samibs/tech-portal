@@ -19,6 +19,7 @@ import {
   generateAllAppPredictions,
   generateAppPredictions
 } from "./services/recommendation";
+import { initializeEmailTransporter, sendTestEmailNotification } from "./services/email";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize monitoring service
@@ -261,6 +262,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update monitor check frequency if it was changed
       if (req.body.checkFrequency) {
         await updateCheckFrequency(settings.checkFrequency);
+      }
+      
+      // Initialize email transporter if email settings were changed
+      if (req.body.enableEmails !== undefined || 
+          req.body.smtpHost !== undefined || 
+          req.body.smtpPort !== undefined || 
+          req.body.smtpUser !== undefined || 
+          req.body.smtpPassword !== undefined) {
+        await initializeEmailTransporter();
       }
       
       res.json(settings);
@@ -543,6 +553,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching app ports:", error);
       res.status(500).json({ message: "Failed to fetch app ports" });
+    }
+  });
+  
+  // Test email notifications
+  app.post("/api/email/test", async (req: Request, res: Response) => {
+    try {
+      const emailAddress = req.body.email;
+      
+      if (!emailAddress) {
+        return res.status(400).json({ message: "Email address is required" });
+      }
+      
+      const result = await sendTestEmailNotification(emailAddress);
+      
+      if (result) {
+        res.json({ 
+          success: true, 
+          message: "Test email sent successfully" 
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          message: "Failed to send test email. Check your SMTP configuration." 
+        });
+      }
+    } catch (error) {
+      console.error("Error sending test email:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to send test email due to an error" 
+      });
     }
   });
   

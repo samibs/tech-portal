@@ -8,13 +8,15 @@ import { useToast } from '@/hooks/use-toast';
 import Sidebar from '@/components/layout/sidebar';
 import MobileHeader from '@/components/layout/mobile-header';
 import { useQuery } from '@tanstack/react-query';
-import { getSettings, updateSettings } from '@/lib/api';
+import { getSettings, updateSettings, sendTestEmail } from '@/lib/api';
 import { Mail, Send, Server, Key, User } from 'lucide-react';
 
 export default function IntegrationsPage() {
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [testEmailAddress, setTestEmailAddress] = useState('');
   
   // Fetch settings
   const { data: settings, isLoading, refetch } = useQuery({
@@ -71,6 +73,43 @@ export default function IntegrationsPage() {
       setIsSubmitting(false);
     }
   };
+  
+  const handleTestEmail = async () => {
+    if (!testEmailAddress) {
+      toast({
+        title: "Error",
+        description: "Please enter an email address to send the test to.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsTesting(true);
+    try {
+      const result = await sendTestEmail(testEmailAddress);
+      
+      if (result.success) {
+        toast({
+          title: "Test Email Sent",
+          description: "A test email has been sent to the address you provided."
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || "Failed to send test email. Check your SMTP configuration.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send test email. Please check your settings and try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -115,7 +154,21 @@ export default function IntegrationsPage() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-6">
-                        <div className="space-y-3">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                              <Label htmlFor="enable-emails" className="text-base">Enable Email Notifications</Label>
+                              <p className="text-sm text-muted-foreground">
+                                Receive email alerts when an application status changes
+                              </p>
+                            </div>
+                            <Switch
+                              id="enable-emails"
+                              checked={enableEmails}
+                              onCheckedChange={setEnableEmails}
+                            />
+                          </div>
+                          
                           <div>
                             <Label htmlFor="notification-email">Notification Email</Label>
                             <Input
@@ -125,6 +178,7 @@ export default function IntegrationsPage() {
                               onChange={(e) => setEmailAddress(e.target.value)}
                               placeholder="you@example.com"
                               className="mt-1"
+                              disabled={!enableEmails}
                             />
                             <p className="text-xs text-muted-foreground mt-1">
                               The email address where you want to receive notifications
@@ -147,6 +201,7 @@ export default function IntegrationsPage() {
                                 onChange={(e) => setSmtpHost(e.target.value)}
                                 placeholder="smtp.example.com"
                                 className="mt-1"
+                                disabled={!enableEmails}
                               />
                             </div>
                             
@@ -212,13 +267,42 @@ export default function IntegrationsPage() {
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter className="flex justify-end">
-                      <Button 
-                        onClick={handleSaveEmailSettings} 
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? "Saving..." : "Save Email Settings"}
-                      </Button>
+                    <CardFooter className="flex flex-col space-y-4 w-full">
+                      <div className="border-t pt-4 w-full">
+                        <h3 className="text-sm font-medium mb-3">Test Your Configuration</h3>
+                        <div className="flex items-end gap-4">
+                          <div className="flex-1">
+                            <Label htmlFor="test-email">Send Test Email To</Label>
+                            <Input
+                              id="test-email"
+                              type="email"
+                              value={testEmailAddress}
+                              onChange={(e) => setTestEmailAddress(e.target.value)}
+                              placeholder="recipient@example.com"
+                              className="mt-1"
+                            />
+                          </div>
+                          <Button 
+                            onClick={handleTestEmail} 
+                            disabled={isTesting || !smtpHost || !smtpUser || !smtpPassword}
+                            variant="outline"
+                          >
+                            {isTesting ? "Sending..." : "Send Test Email"}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Save your settings before testing. The test email will be sent to the address you specify.
+                        </p>
+                      </div>
+                      
+                      <div className="flex justify-end w-full">
+                        <Button 
+                          onClick={handleSaveEmailSettings} 
+                          disabled={isSubmitting}
+                        >
+                          {isSubmitting ? "Saving..." : "Save Email Settings"}
+                        </Button>
+                      </div>
                     </CardFooter>
                   </Card>
                 </TabsContent>
