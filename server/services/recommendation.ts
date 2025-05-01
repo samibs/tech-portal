@@ -21,6 +21,13 @@ interface RestartRecommendation {
   lastRestarted: Date | null;
   statusHistory: string[];
   uptime: number; // in minutes
+  
+  // Additional information for more detailed UI display
+  primaryFactor?: string; // Main reason for recommendation
+  urgency?: 'low' | 'medium' | 'high' | 'critical'; // How urgent is this restart
+  predictedIssues?: string[]; // What might happen if not restarted
+  recommendedTimeWindow?: string; // When should this restart happen
+  memoryLeakLikelihood?: number; // Probability of memory leak (0-100)
 }
 
 /**
@@ -119,6 +126,70 @@ async function analyzeApp(app: ReplitApp): Promise<RestartRecommendation | null>
       .slice(0, 5)
       .map(log => `${new Date(log.timestamp).toLocaleString()}: ${log.action} - ${log.status}`);
     
+    // Determine urgency level based on score and current status
+    let urgency: 'low' | 'medium' | 'high' | 'critical' = 'low';
+    if (recommendationScore >= 80 || app.status === AppStatus.UNREACHABLE || app.status === AppStatus.ERROR) {
+      urgency = 'critical';
+    } else if (recommendationScore >= 60) {
+      urgency = 'high';
+    } else if (recommendationScore >= 40) {
+      urgency = 'medium';
+    }
+    
+    // Determine primary factor for the recommendation
+    let primaryFactor = '';
+    if (app.status === AppStatus.UNREACHABLE || app.status === AppStatus.ERROR) {
+      primaryFactor = 'Current Error State';
+    } else if (healthMetrics.memoryLeakLikelihood > 60) {
+      primaryFactor = 'Probable Memory Leak';
+    } else if (healthMetrics.errorFrequencyTrend === 'increasing') {
+      primaryFactor = 'Increasing Error Rate';
+    } else if (healthMetrics.performanceDegradation > 30) {
+      primaryFactor = 'Performance Degradation';
+    } else if (healthMetrics.timeBasedPatterns.length > 0) {
+      primaryFactor = 'Time-based Failure Pattern';
+    } else if (healthMetrics.daysSinceLastRestart > PERIODIC_RESTART_INTERVAL_DAYS) {
+      primaryFactor = 'Extended Uptime';
+    } else {
+      primaryFactor = 'General Stability';
+    }
+    
+    // Predict potential issues if not restarted
+    const predictedIssues: string[] = [];
+    
+    if (healthMetrics.memoryLeakLikelihood > 50) {
+      predictedIssues.push('Potential application crash due to memory exhaustion');
+    }
+    
+    if (healthMetrics.errorFrequencyTrend === 'increasing') {
+      predictedIssues.push('Progressively degrading user experience as errors increase');
+    }
+    
+    if (healthMetrics.performanceDegradation > 20) {
+      predictedIssues.push('Slowed response times and reduced throughput');
+    }
+    
+    if (app.status !== AppStatus.RUNNING) {
+      predictedIssues.push('Continued service unavailability');
+    }
+    
+    if (predictedIssues.length === 0) {
+      predictedIssues.push('Potential periodic instability');
+    }
+    
+    // Recommended time window for restart
+    let recommendedTimeWindow = '';
+    
+    if (urgency === 'critical') {
+      recommendedTimeWindow = 'Immediate restart recommended';
+    } else if (urgency === 'high') {
+      recommendedTimeWindow = 'Within the next hour';
+    } else if (urgency === 'medium') {
+      recommendedTimeWindow = 'Within the next 24 hours';
+    } else {
+      recommendedTimeWindow = 'During the next scheduled maintenance';
+    }
+    
     return {
       appId: app.id,
       appName: app.name,
@@ -126,7 +197,14 @@ async function analyzeApp(app: ReplitApp): Promise<RestartRecommendation | null>
       reason,
       lastRestarted: healthMetrics.lastRestarted,
       statusHistory,
-      uptime: healthMetrics.averageUptime
+      uptime: healthMetrics.averageUptime,
+      
+      // New enriched fields
+      primaryFactor,
+      urgency,
+      predictedIssues,
+      recommendedTimeWindow,
+      memoryLeakLikelihood: Math.round(healthMetrics.memoryLeakLikelihood)
     };
   } catch (error) {
     console.error(`Error analyzing app ${app.id}:`, error);

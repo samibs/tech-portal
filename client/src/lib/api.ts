@@ -79,6 +79,13 @@ export interface RestartRecommendation {
   lastRestarted: Date | null;
   statusHistory: string[];
   uptime: number; // in minutes
+  
+  // Advanced fields from enhanced recommendation engine
+  primaryFactor?: string; // Main reason for recommendation
+  urgency?: 'low' | 'medium' | 'high' | 'critical'; // How urgent is this restart
+  predictedIssues?: string[]; // What might happen if not restarted
+  recommendedTimeWindow?: string; // When should this restart happen
+  memoryLeakLikelihood?: number; // Probability of memory leak (0-100)
 }
 
 export async function getRestartRecommendations() {

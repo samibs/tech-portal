@@ -3,9 +3,24 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { RestartRecommendation, getRestartRecommendations, restartApp } from "@/lib/api";
 import { formatDistanceToNow } from "date-fns";
-import { AlertTriangle, RotateCw } from "lucide-react";
+import { 
+  AlertTriangle, 
+  RotateCw, 
+  Clock, 
+  AlertCircle, 
+  ArrowUpCircle,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp
+} from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface RecommendationsCardProps {
   onAppRestarted: () => void;
@@ -16,9 +31,17 @@ export default function RecommendationsCard({ onAppRestarted }: RecommendationsC
   const [recommendations, setRecommendations] = useState<RestartRecommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [restartingAppId, setRestartingAppId] = useState<number | null>(null);
+  const [expandedRecommendations, setExpandedRecommendations] = useState<number[]>([]);
 
   useEffect(() => {
     fetchRecommendations();
+    
+    // Refresh recommendations every 60 seconds
+    const interval = setInterval(() => {
+      fetchRecommendations();
+    }, 60000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const fetchRecommendations = async () => {
@@ -59,6 +82,31 @@ export default function RecommendationsCard({ onAppRestarted }: RecommendationsC
       });
     } finally {
       setRestartingAppId(null);
+    }
+  };
+
+  const toggleExpandRecommendation = (id: number) => {
+    setExpandedRecommendations(prev => 
+      prev.includes(id) 
+        ? prev.filter(appId => appId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const getUrgencyBadge = (urgency?: string) => {
+    if (!urgency) return null;
+    
+    switch (urgency) {
+      case 'critical':
+        return <Badge variant="destructive" className="ml-2">Critical</Badge>;
+      case 'high':
+        return <Badge variant="destructive" className="ml-2 bg-orange-500">High</Badge>;
+      case 'medium':
+        return <Badge variant="outline" className="ml-2 border-amber-500 text-amber-500">Medium</Badge>;
+      case 'low':
+        return <Badge variant="outline" className="ml-2 border-green-500 text-green-500">Low</Badge>;
+      default:
+        return null;
     }
   };
 
@@ -109,14 +157,22 @@ export default function RecommendationsCard({ onAppRestarted }: RecommendationsC
           Restart Recommendations
         </CardTitle>
         <CardDescription>
-          Intelligent recommendations based on app performance metrics
+          Intelligent recommendations based on advanced app performance analysis
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {recommendations.slice(0, 3).map((recommendation) => (
-          <div key={recommendation.appId} className="border rounded-lg p-4">
+          <Collapsible 
+            key={recommendation.appId} 
+            open={expandedRecommendations.includes(recommendation.appId)}
+            onOpenChange={() => toggleExpandRecommendation(recommendation.appId)}
+            className="border rounded-lg p-4 transition-all hover:shadow-md"
+          >
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-medium">{recommendation.appName}</h3>
+              <h3 className="font-medium flex items-center">
+                {recommendation.appName}
+                {getUrgencyBadge(recommendation.urgency)}
+              </h3>
               <span className={`text-sm font-semibold ${getRecommendationClass(recommendation.recommendationScore)}`}>
                 Score: {recommendation.recommendationScore}/100
               </span>
@@ -129,14 +185,99 @@ export default function RecommendationsCard({ onAppRestarted }: RecommendationsC
             
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{recommendation.reason}</p>
             
-            <div className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-              {recommendation.lastRestarted ? (
-                <p>Last restarted: {formatDistanceToNow(new Date(recommendation.lastRestarted), { addSuffix: true })}</p>
-              ) : (
-                <p>No recent restarts</p>
-              )}
-              <p>Uptime: {Math.round(recommendation.uptime / 60)} hours</p>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-3 grid grid-cols-2 gap-1">
+              <div className="flex items-center">
+                <Clock className="h-3 w-3 mr-1" />
+                {recommendation.lastRestarted ? (
+                  <span>Last restarted: {formatDistanceToNow(new Date(recommendation.lastRestarted), { addSuffix: true })}</span>
+                ) : (
+                  <span>No recent restarts</span>
+                )}
+              </div>
+              <div className="flex items-center">
+                <ArrowUpCircle className="h-3 w-3 mr-1" />
+                <span>Uptime: {Math.round(recommendation.uptime / 60)} hours</span>
+              </div>
             </div>
+            
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="p-0 h-6 mb-2 w-full flex justify-center items-center">
+                {expandedRecommendations.includes(recommendation.appId) ? (
+                  <span className="flex items-center text-xs text-gray-500">
+                    Show less <ChevronUp className="h-4 w-4 ml-1" />
+                  </span>
+                ) : (
+                  <span className="flex items-center text-xs text-gray-500">
+                    Show advanced analysis <ChevronDown className="h-4 w-4 ml-1" />
+                  </span>
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            
+            <CollapsibleContent className="pt-2 border-t mt-1 mb-3">
+              <div className="space-y-3">
+                {recommendation.memoryLeakLikelihood && recommendation.memoryLeakLikelihood > 20 && (
+                  <div className="flex items-start text-xs">
+                    <AlertCircle className="h-4 w-4 mr-2 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Memory Leak Probability: {recommendation.memoryLeakLikelihood}%</p>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Analysis indicates potential memory resource exhaustion if the application continues to run.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {recommendation.primaryFactor && (
+                  <div className="flex items-start text-xs">
+                    <TrendingUp className="h-4 w-4 mr-2 text-blue-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Primary Factor: {recommendation.primaryFactor}</p>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        This is the main contributing factor to the restart recommendation.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {recommendation.recommendedTimeWindow && (
+                  <div className="flex items-start text-xs">
+                    <Clock className="h-4 w-4 mr-2 text-purple-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Recommended Timing: {recommendation.recommendedTimeWindow}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {recommendation.predictedIssues && recommendation.predictedIssues.length > 0 && (
+                  <div className="flex items-start text-xs">
+                    <AlertTriangle className="h-4 w-4 mr-2 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Predicted Issues:</p>
+                      <ul className="list-disc list-inside pl-1 text-gray-500 dark:text-gray-400 space-y-1">
+                        {recommendation.predictedIssues.map((issue, idx) => (
+                          <li key={idx}>{issue}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+                
+                {recommendation.statusHistory && recommendation.statusHistory.length > 0 && (
+                  <div className="flex items-start text-xs">
+                    <RotateCw className="h-4 w-4 mr-2 text-gray-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Recent Status History:</p>
+                      <ul className="list-none pl-1 text-gray-500 dark:text-gray-400 space-y-1">
+                        {recommendation.statusHistory.map((status, idx) => (
+                          <li key={idx}>{status}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CollapsibleContent>
             
             <Button 
               onClick={() => handleRestartApp(recommendation)} 
@@ -156,7 +297,7 @@ export default function RecommendationsCard({ onAppRestarted }: RecommendationsC
                 </span>
               )}
             </Button>
-          </div>
+          </Collapsible>
         ))}
       </CardContent>
       {recommendations.length > 3 && (
