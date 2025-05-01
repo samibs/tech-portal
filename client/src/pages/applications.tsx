@@ -2,10 +2,8 @@ import { useState } from 'react';
 import { useApps } from '@/hooks/use-apps';
 import Sidebar from '@/components/layout/sidebar';
 import MobileHeader from '@/components/layout/mobile-header';
-import DashboardStats from '@/components/dashboard-stats';
 import AppCard from '@/components/app-card';
 import AddAppDialog from '@/components/add-app-dialog';
-import ChangeFrequencyDialog from '@/components/change-frequency-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,19 +11,17 @@ import { AppType } from '@shared/schema';
 import { Plus, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-export default function Dashboard() {
+export default function Applications() {
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [addAppDialogOpen, setAddAppDialogOpen] = useState(false);
-  const [changeFrequencyDialogOpen, setChangeFrequencyDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   
   const { 
     apps, 
     isLoading, 
-    stats, 
-    refetchApps, 
+    refetchApps,
     refetchStats 
   } = useApps();
 
@@ -44,14 +40,6 @@ export default function Dashboard() {
     refetchStats();
   };
 
-  const handleFrequencyChanged = () => {
-    toast({
-      title: "Success!",
-      description: "Check frequency updated successfully.",
-    });
-    refetchStats();
-  };
-
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar for desktop */}
@@ -65,7 +53,7 @@ export default function Dashboard() {
         {/* Main content header */}
         <div className="bg-white shadow dark:bg-gray-800">
           <div className="px-4 sm:px-6 lg:px-8 py-4 md:py-6 flex justify-between items-center">
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Tech Portal Dashboard</h1>
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Application Management</h1>
             <div className="flex items-center space-x-4">
               <div className="hidden md:block">
                 <div className="relative">
@@ -89,22 +77,15 @@ export default function Dashboard() {
           </div>
         </div>
         
-        {/* Dashboard content */}
+        {/* Applications content */}
         <div className="flex-1 overflow-auto">
-          {/* Dashboard stats */}
-          <DashboardStats 
-            stats={stats} 
-            onChangeFrequency={() => setChangeFrequencyDialogOpen(true)} 
-            isLoading={isLoading} 
-          />
-          
           {/* App list */}
           <div className="px-4 sm:px-6 lg:px-8 py-4">
             <div className="sm:flex sm:items-center">
               <div className="sm:flex-auto">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Registered Applications</h2>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Manage Applications</h2>
                 <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-                  Status and controls for all your registered Replit applications.
+                  Register, monitor, and control your Replit applications from a single interface.
                 </p>
               </div>
               <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
@@ -168,13 +149,6 @@ export default function Dashboard() {
         open={addAppDialogOpen} 
         onOpenChange={setAddAppDialogOpen} 
         onAppAdded={handleAppAdded} 
-      />
-      
-      <ChangeFrequencyDialog 
-        open={changeFrequencyDialogOpen} 
-        onOpenChange={setChangeFrequencyDialogOpen}
-        currentFrequency={stats?.checkFrequency || 30}
-        onFrequencyChanged={handleFrequencyChanged}
       />
     </div>
   );

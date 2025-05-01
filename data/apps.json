@@ -1,0 +1,1 @@
+[{"id":1,"name":"Security Scanner","replitUrl":"localhost","startCommand":"npm run dev","port":3000,"type":"Frontend","status":"Stopped","lastChecked":"2025-05-01T13:11:49.458Z","lastLogs":null,"createdAt":"2025-05-01T13:07:24.683Z"}]

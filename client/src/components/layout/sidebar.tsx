@@ -16,34 +16,34 @@ export default function Sidebar({ mobileMenuOpen, closeMobileMenu }: SidebarProp
       <div className="flex items-center justify-center h-16 px-4 bg-primary-700">
         <div className="flex items-center space-x-2">
           <Zap className="w-8 h-8" />
-          <span className="text-xl font-semibold tracking-wider">ReplitMaster™</span>
+          <span className="text-xl font-semibold tracking-wider">Tech Portal</span>
         </div>
       </div>
       <div className="flex flex-col flex-grow px-4 py-4">
         <div className="space-y-1">
           <Link href="/">
-            <a className="flex items-center px-2 py-2 text-sm font-medium rounded-md bg-primary-700 text-white">
+            <div className="flex items-center px-2 py-2 text-sm font-medium rounded-md bg-primary-700 text-white cursor-pointer">
               <BarChart2 className="mr-3 h-5 w-5 text-white" />
               Dashboard
-            </a>
+            </div>
           </Link>
           <Link href="#">
-            <a className="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-primary-600 hover:text-white">
+            <div className="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-primary-600 hover:text-white cursor-pointer">
               <ChevronDown className="mr-3 h-5 w-5 text-gray-400" />
               Applications
-            </a>
+            </div>
           </Link>
           <Link href="#">
-            <a className="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-primary-600 hover:text-white">
+            <div className="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-primary-600 hover:text-white cursor-pointer">
               <Settings className="mr-3 h-5 w-5 text-gray-400" />
               Settings
-            </a>
+            </div>
           </Link>
           <Link href="#">
-            <a className="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-primary-600 hover:text-white">
+            <div className="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-primary-600 hover:text-white cursor-pointer">
               <HelpCircle className="mr-3 h-5 w-5 text-gray-400" />
               Help
-            </a>
+            </div>
           </Link>
         </div>
       </div>
