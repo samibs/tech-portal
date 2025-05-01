@@ -47,6 +47,9 @@ export async function updateCheckFrequency(seconds: number): Promise<void> {
   console.log(`Check frequency updated to ${seconds}s`);
 }
 
+// Import the controller functions
+import { restartApp } from "./controller";
+
 // Check all registered apps
 async function checkAllApps(): Promise<void> {
   try {
@@ -56,20 +59,59 @@ async function checkAllApps(): Promise<void> {
     for (const app of apps) {
       await checkAppStatus(app);
       
+      // Refresh app data after status check
+      const updatedApp = await storage.getApp(app.id);
+      if (!updatedApp) continue; // Skip if app was deleted
+      
       // Handle auto-restart if enabled
       if (settings.autoRestart && 
-          (app.status === AppStatus.STOPPED || app.status === AppStatus.UNREACHABLE)) {
-        // Attempt to restart the app
-        console.log(`Auto-restart attempt for app ${app.id}: ${app.name}`);
+          (updatedApp.status === AppStatus.STOPPED || updatedApp.status === AppStatus.UNREACHABLE || 
+           updatedApp.status === AppStatus.ERROR)) {
         
-        // In a real implementation, this would use the controller service
-        // to actually restart the app. For now, we'll just log the attempt.
+        // Attempt to restart the app
+        console.log(`Auto-restart attempt for app ${updatedApp.id}: ${updatedApp.name}`);
+        
+        // Log the auto-restart attempt
         await storage.createLog({
-          appId: app.id,
+          appId: updatedApp.id,
           action: "Auto-restart Attempt",
-          details: `Auto-restart triggered for app in ${app.status} state`,
-          status: app.status
+          details: `Auto-restart triggered for app in ${updatedApp.status} state`,
+          status: updatedApp.status
         });
+        
+        // Actually try to restart the app using the controller
+        try {
+          const result = await restartApp(updatedApp);
+          
+          if (result.success) {
+            console.log(`Auto-restart successful for app ${updatedApp.id}: ${updatedApp.name}`);
+            
+            await storage.createLog({
+              appId: updatedApp.id,
+              action: "Auto-restart Success",
+              details: `Auto-restart completed successfully`,
+              status: AppStatus.RUNNING
+            });
+          } else {
+            console.error(`Auto-restart failed for app ${updatedApp.id}: ${result.error}`);
+            
+            await storage.createLog({
+              appId: updatedApp.id,
+              action: "Auto-restart Failed",
+              details: `Auto-restart failed: ${result.error}`,
+              status: updatedApp.status
+            });
+          }
+        } catch (error) {
+          console.error(`Error during auto-restart for app ${updatedApp.id}:`, error);
+          
+          await storage.createLog({
+            appId: updatedApp.id,
+            action: "Auto-restart Error",
+            details: `Auto-restart error: ${(error as Error).message}`,
+            status: updatedApp.status
+          });
+        }
       }
     }
   } catch (error) {

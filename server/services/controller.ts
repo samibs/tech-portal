@@ -44,6 +44,67 @@ export async function startApp(app: ReplitApp): Promise<AppControlResult> {
     // Documentation on limitations
     console.log(`NOTE: Limited control within Replit environment. In a real implementation, this would use Replit's API to start ${app.name}`);
     
+    // Validate the startCommand and port before proceeding
+    if (!app.startCommand || app.startCommand.trim() === '') {
+      // Log failure
+      await storage.createLog({
+        appId: app.id,
+        action: "Start Failed",
+        details: `Failed to start app: Invalid start command`,
+        status: app.status
+      });
+      
+      return {
+        success: false,
+        error: `Invalid start command for ${app.name}`
+      };
+    }
+    
+    if (!app.port || app.port <= 0 || app.port > 65535) {
+      // Log failure
+      await storage.createLog({
+        appId: app.id,
+        action: "Start Failed",
+        details: `Failed to start app: Invalid port number ${app.port}`,
+        status: app.status
+      });
+      
+      return {
+        success: false,
+        error: `Invalid port number ${app.port} for ${app.name}`
+      };
+    }
+    
+    // Check if replitUrl is valid
+    try {
+      new URL(app.replitUrl.startsWith("http") ? app.replitUrl : `http://${app.replitUrl}`);
+    } catch (err) {
+      // Log failure
+      await storage.createLog({
+        appId: app.id,
+        action: "Start Failed",
+        details: `Failed to start app: Invalid URL ${app.replitUrl}`,
+        status: app.status
+      });
+      
+      return {
+        success: false,
+        error: `Invalid URL ${app.replitUrl} for ${app.name}`
+      };
+    }
+    
+    // Simulate trying to connect to the application
+    const canConnect = await simulateConnectionCheck(app);
+    if (!canConnect.success) {
+      // Log the connection failure but still update status to show we "tried" to start it
+      await storage.createLog({
+        appId: app.id,
+        action: "Started with Warning",
+        details: `App ${app.name} started but might not be reachable: ${canConnect.error}`,
+        status: AppStatus.RUNNING
+      });
+    }
+    
     // Simulate successful start and update status
     const updatedApp = await storage.updateApp(app.id, {
       status: AppStatus.RUNNING,
@@ -54,7 +115,7 @@ export async function startApp(app: ReplitApp): Promise<AppControlResult> {
     await storage.createLog({
       appId: app.id,
       action: "Started",
-      details: `App ${app.name} started successfully`,
+      details: `App ${app.name} started successfully (Note: This is a simulation)`,
       status: AppStatus.RUNNING
     });
     
@@ -76,6 +137,35 @@ export async function startApp(app: ReplitApp): Promise<AppControlResult> {
     return {
       success: false,
       error: `Failed to start app: ${(error as Error).message}`
+    };
+  }
+}
+
+// Helper function to simulate checking if we can connect to the app
+async function simulateConnectionCheck(app: ReplitApp): Promise<{success: boolean, error?: string}> {
+  try {
+    // This is a simulation, so we'll just return success based on a simple check
+    if (app.replitUrl.includes('localhost') || app.replitUrl.includes('127.0.0.1')) {
+      return {
+        success: false,
+        error: "Cannot connect to localhost from remote services"
+      };
+    }
+    
+    // Simulate a random success/failure to make it more realistic
+    const randomSuccess = Math.random() > 0.2; // 80% success rate
+    if (!randomSuccess) {
+      return {
+        success: false,
+        error: "Simulated connection timeout"
+      };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: `Connection check failed: ${(error as Error).message}`
     };
   }
 }
@@ -105,6 +195,45 @@ export async function stopApp(app: ReplitApp): Promise<AppControlResult> {
     // Documentation on limitations
     console.log(`NOTE: Limited control within Replit environment. In a real implementation, this would use Replit's API to stop ${app.name}`);
     
+    // Validate app details
+    if (!app.name || app.name.trim() === '') {
+      await storage.createLog({
+        appId: app.id,
+        action: "Stop Failed",
+        details: `Failed to stop app: Invalid app name`,
+        status: app.status
+      });
+      
+      return {
+        success: false,
+        error: `Invalid app name for ID ${app.id}`
+      };
+    }
+    
+    // Remove from running processes if exists
+    if (runningProcesses.has(app.id)) {
+      runningProcesses.delete(app.id);
+    }
+    
+    // Simulate a short pause for stopping
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Simulate a random failure (10% chance)
+    const randomSuccess = Math.random() > 0.1;
+    if (!randomSuccess) {
+      await storage.createLog({
+        appId: app.id,
+        action: "Stop Failed",
+        details: `Failed to stop app: Connection refused`,
+        status: app.status
+      });
+      
+      return {
+        success: false,
+        error: `Failed to stop ${app.name}: Connection refused (simulated failure)`
+      };
+    }
+    
     // Simulate successful stop and update status
     const updatedApp = await storage.updateApp(app.id, {
       status: AppStatus.STOPPED,
@@ -115,7 +244,7 @@ export async function stopApp(app: ReplitApp): Promise<AppControlResult> {
     await storage.createLog({
       appId: app.id,
       action: "Stopped",
-      details: `App ${app.name} stopped successfully`,
+      details: `App ${app.name} stopped successfully (Note: This is a simulation)`,
       status: AppStatus.STOPPED
     });
     
@@ -144,6 +273,21 @@ export async function stopApp(app: ReplitApp): Promise<AppControlResult> {
 // Restart an app
 export async function restartApp(app: ReplitApp): Promise<AppControlResult> {
   try {
+    // Validate app
+    if (!app.name || app.name.trim() === '') {
+      await storage.createLog({
+        appId: app.id,
+        action: "Restart Failed",
+        details: `Failed to restart app: Invalid app name`,
+        status: app.status
+      });
+      
+      return {
+        success: false,
+        error: `Invalid app name for ID ${app.id}`
+      };
+    }
+    
     // Log restart attempt
     await storage.createLog({
       appId: app.id,
@@ -152,20 +296,62 @@ export async function restartApp(app: ReplitApp): Promise<AppControlResult> {
       status: app.status
     });
     
-    // Stop the app first
-    const stopResult = await stopApp(app);
-    if (!stopResult.success) {
+    // Special case: if app is in ERROR or UNREACHABLE state, we should try to start it anyway
+    if (app.status === AppStatus.ERROR || app.status === AppStatus.UNREACHABLE) {
+      console.log(`App ${app.name} is in ${app.status} state, attempting direct start`);
+      
+      // Update status to STOPPED first
+      const updatedApp = await storage.updateApp(app.id, {
+        status: AppStatus.STOPPED,
+        lastChecked: new Date()
+      });
+      
+      // Start the app
+      const startResult = await startApp(updatedApp);
+      if (!startResult.success) {
+        return {
+          success: false,
+          error: `Failed to start app from ${app.status} state: ${startResult.error}`
+        };
+      }
+      
+      // Log successful restart from error state
+      await storage.createLog({
+        appId: app.id,
+        action: "Restarted from Error",
+        details: `App ${app.name} restarted successfully from ${app.status} state`,
+        status: AppStatus.RUNNING
+      });
+      
       return {
-        success: false,
-        error: `Failed to stop app during restart: ${stopResult.error}`
+        success: true,
+        app: startResult.app
       };
+    }
+    
+    // Normal restart flow for RUNNING or STOPPED states
+    // Stop the app first if it's running
+    let currentApp = app;
+    if (app.status === AppStatus.RUNNING) {
+      const stopResult = await stopApp(app);
+      if (!stopResult.success) {
+        // Don't fail the whole restart if stop fails, log and continue
+        await storage.createLog({
+          appId: app.id,
+          action: "Restart Warning",
+          details: `Warning during restart: ${stopResult.error}. Continuing with start.`,
+          status: app.status
+        });
+      } else {
+        currentApp = stopResult.app!;
+      }
     }
     
     // Wait a short time before starting
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Start the app
-    const startResult = await startApp(stopResult.app!);
+    const startResult = await startApp(currentApp);
     if (!startResult.success) {
       return {
         success: false,
@@ -177,7 +363,7 @@ export async function restartApp(app: ReplitApp): Promise<AppControlResult> {
     await storage.createLog({
       appId: app.id,
       action: "Restarted",
-      details: `App ${app.name} restarted successfully`,
+      details: `App ${app.name} restarted successfully (Note: This is a simulation)`,
       status: AppStatus.RUNNING
     });
     
