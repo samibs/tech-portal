@@ -9,7 +9,7 @@ import ChangeFrequencyDialog from '@/components/change-frequency-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AppType } from '@shared/schema';
+import { AppType, ReplitApp } from '@shared/schema';
 import { Plus, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -29,7 +29,7 @@ export default function Dashboard() {
     refetchStats 
   } = useApps();
 
-  const filteredApps = apps?.filter(app => {
+  const filteredApps = apps?.filter((app: ReplitApp) => {
     const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = filterType === 'all' || app.type === filterType;
     return matchesSearch && matchesType;
@@ -146,7 +146,7 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {filteredApps.map((app) => (
+                  {filteredApps.map((app: ReplitApp) => (
                     <AppCard
                       key={app.id}
                       app={app}

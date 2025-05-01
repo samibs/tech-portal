@@ -27,13 +27,13 @@ export default function Sidebar({ mobileMenuOpen, closeMobileMenu }: SidebarProp
               Dashboard
             </div>
           </Link>
-          <Link href="#">
+          <Link href="/applications">
             <div className="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-primary-600 hover:text-white cursor-pointer">
               <ChevronDown className="mr-3 h-5 w-5 text-gray-400" />
               Applications
             </div>
           </Link>
-          <Link href="#">
+          <Link href="/settings">
             <div className="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-primary-600 hover:text-white cursor-pointer">
               <Settings className="mr-3 h-5 w-5 text-gray-400" />
               Settings
