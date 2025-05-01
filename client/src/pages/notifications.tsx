@@ -10,12 +10,11 @@ import NotificationDemo from "@/components/notification-demo";
 import { Bell, Settings, Clock, AlertTriangle, ArrowLeftIcon } from "lucide-react";
 import Sidebar from "@/components/layout/sidebar";
 import MobileHeader from "@/components/layout/mobile-header";
-import { useLocation } from "wouter";
+import { Link } from "wouter";
 
 export default function NotificationsPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { notifications, clearNotifications } = useNotifications();
-  const [, setLocation] = useLocation();
   const [settings, setSettings] = useState({
     statusNotifications: true,
     predictionNotifications: true,
@@ -59,10 +58,12 @@ export default function NotificationsPage() {
                 variant="ghost" 
                 size="sm" 
                 className="mr-4" 
-                onClick={() => setLocation('/')}
+                asChild
               >
-                <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                <Link to="/">
+                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Link>
               </Button>
               <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>
             </div>
