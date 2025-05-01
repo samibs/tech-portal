@@ -27,11 +27,33 @@ export default function Settings() {
   const [checkFrequency, setCheckFrequency] = useState(settings?.checkFrequency || 30);
   const [autoRestart, setAutoRestart] = useState(settings?.autoRestart || false);
   
+  // Email settings form state
+  const [enableEmails, setEnableEmails] = useState(settings?.enableEmails || false);
+  const [emailAddress, setEmailAddress] = useState(settings?.emailAddress || '');
+  
+  // SMTP settings form state
+  const [smtpHost, setSmtpHost] = useState(settings?.smtpHost || '');
+  const [smtpPort, setSmtpPort] = useState(settings?.smtpPort || 587);
+  const [smtpUser, setSmtpUser] = useState(settings?.smtpUser || '');
+  const [smtpPassword, setSmtpPassword] = useState(settings?.smtpPassword || '');
+  const [smtpSender, setSmtpSender] = useState(settings?.smtpSender || '');
+  
   // Update when settings load
   useState(() => {
     if (settings) {
       setCheckFrequency(settings.checkFrequency);
       setAutoRestart(settings.autoRestart);
+      
+      // Email settings
+      setEnableEmails(settings.enableEmails || false);
+      setEmailAddress(settings.emailAddress || '');
+      
+      // SMTP settings
+      setSmtpHost(settings.smtpHost || '');
+      setSmtpPort(settings.smtpPort || 587);
+      setSmtpUser(settings.smtpUser || '');
+      setSmtpPassword(settings.smtpPassword || '');
+      setSmtpSender(settings.smtpSender || '');
     }
   });
   
@@ -40,7 +62,14 @@ export default function Settings() {
     try {
       await updateSettings({
         checkFrequency,
-        autoRestart
+        autoRestart,
+        enableEmails,
+        emailAddress,
+        smtpHost,
+        smtpPort,
+        smtpUser,
+        smtpPassword,
+        smtpSender
       });
       toast({
         title: "Settings Saved",
@@ -170,7 +199,11 @@ export default function Settings() {
                               Receive email notifications for important alerts
                             </p>
                           </div>
-                          <Switch id="email-notifications" />
+                          <Switch 
+                            id="email-notifications"
+                            checked={enableEmails}
+                            onCheckedChange={setEnableEmails}
+                          />
                         </div>
                         
                         <div className="pt-2">
@@ -180,12 +213,105 @@ export default function Settings() {
                             type="email" 
                             placeholder="Enter your email address" 
                             className="mt-1"
+                            value={emailAddress}
+                            onChange={(e) => setEmailAddress(e.target.value)}
+                            disabled={!enableEmails}
                           />
+                        </div>
+                        
+                        <div className="border-t pt-4 mt-4">
+                          <h3 className="text-sm font-medium mb-3">SMTP Configuration</h3>
+                          
+                          <div className="space-y-3">
+                            <div>
+                              <Label htmlFor="smtp-host">SMTP Host</Label>
+                              <Input 
+                                id="smtp-host" 
+                                placeholder="smtp.example.com" 
+                                className="mt-1"
+                                value={smtpHost}
+                                onChange={(e) => setSmtpHost(e.target.value)}
+                                disabled={!enableEmails}
+                              />
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor="smtp-port">SMTP Port</Label>
+                              <Input 
+                                id="smtp-port" 
+                                type="number"
+                                placeholder="587" 
+                                className="mt-1"
+                                value={smtpPort}
+                                onChange={(e) => setSmtpPort(parseInt(e.target.value))}
+                                disabled={!enableEmails}
+                              />
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor="smtp-user">SMTP Username</Label>
+                              <Input 
+                                id="smtp-user" 
+                                placeholder="username@example.com" 
+                                className="mt-1"
+                                value={smtpUser}
+                                onChange={(e) => setSmtpUser(e.target.value)}
+                                disabled={!enableEmails}
+                              />
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor="smtp-password">SMTP Password</Label>
+                              <Input 
+                                id="smtp-password" 
+                                type="password"
+                                placeholder="••••••••" 
+                                className="mt-1"
+                                value={smtpPassword}
+                                onChange={(e) => setSmtpPassword(e.target.value)}
+                                disabled={!enableEmails}
+                              />
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor="smtp-sender">Sender Email</Label>
+                              <Input 
+                                id="smtp-sender" 
+                                type="email"
+                                placeholder="alerts@yourdomain.com" 
+                                className="mt-1"
+                                value={smtpSender}
+                                onChange={(e) => setSmtpSender(e.target.value)}
+                                disabled={!enableEmails}
+                              />
+                              <p className="text-xs text-muted-foreground mt-1">
+                                The email address that notifications will be sent from
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter className="text-xs text-gray-500 dark:text-gray-400">
-                      Notification settings are saved automatically
+                    <CardFooter className="flex justify-end">
+                      <Button 
+                        onClick={handleSaveSettings} 
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4 mr-2" />
+                            Save Settings
+                          </>
+                        )}
+                      </Button>
                     </CardFooter>
                   </Card>
                 </div>
