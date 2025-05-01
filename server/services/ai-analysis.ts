@@ -43,9 +43,8 @@ export async function analyzeAppWithAI(
         type: app.type,
         url: app.replitUrl,
         status: app.status,
-        monitoringFrequency: app.monitoringFrequency,
         resourceUsage: app.resourceUsage || 'Unknown',
-        lastPingTime: app.lastPingTime ? new Date(app.lastPingTime).toISOString() : 'Never'
+        lastChecked: app.lastChecked ? new Date(app.lastChecked).toISOString() : 'Never'
       },
       recentLogs: recentLogs.map(log => ({
         timestamp: new Date(log.timestamp).toISOString(),
@@ -116,7 +115,10 @@ Keep insights concise (15-25 words each) and focused on technical root cause ana
     });
 
     // Extract the content from the response
-    const content = response.content[0].text;
+    // The newest version of the Anthropic SDK returns content differently
+    const content = response.content[0]?.type === 'text' ? 
+      (response.content[0] as { type: 'text', text: string }).text :
+      JSON.stringify({insights: ["Could not extract content from AI response"]});
     
     try {
       // Parse the JSON response
@@ -206,7 +208,10 @@ Respond ONLY with an array of 3-5 concise insights as strings, nothing else. Eac
     });
 
     // Extract the content from the response
-    const content = response.content[0].text;
+    // The newest version of the Anthropic SDK returns content differently
+    const content = response.content[0]?.type === 'text' ? 
+      (response.content[0] as { type: 'text', text: string }).text :
+      JSON.stringify(["Could not extract content from AI response"]);
     
     try {
       // Parse the JSON response - expecting an array of strings

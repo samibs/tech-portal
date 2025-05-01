@@ -1,5 +1,6 @@
 import { ReplitApp, AppStatus, LogEntry } from "@shared/schema";
 import { storage } from "../storage";
+import { analyzeAppWithAI, analyzeSystemWithAI } from "./ai-analysis";
 
 // Constants for recommendation logic
 const MEMORY_LEAK_THRESHOLD_HOURS = 24; // After how many hours of uptime we suspect memory leaks
@@ -21,7 +22,7 @@ const FAILURE_HISTORY_WEIGHT = 1.2; // Weight for historical failure patterns
 /**
  * Interface for restart recommendation
  */
-interface RestartRecommendation {
+export interface RestartRecommendation {
   appId: number;
   appName: string;
   recommendationScore: number; // 0-100, higher means stronger recommendation
@@ -36,6 +37,11 @@ interface RestartRecommendation {
   predictedIssues?: string[]; // What might happen if not restarted
   recommendedTimeWindow?: string; // When should this restart happen
   memoryLeakLikelihood?: number; // Probability of memory leak (0-100)
+  
+  // AI-powered insights and analysis
+  aiInsights?: string[]; // Additional insights from AI analysis
+  confidenceScore?: number; // AI's confidence in the recommendation (0-100)
+  alternativeSolutions?: string[]; // Alternative solutions suggested by AI
 }
 
 /**
@@ -331,7 +337,7 @@ async function analyzeApp(app: ReplitApp): Promise<RestartRecommendation | null>
       recommendedTimeWindow = 'During the next scheduled maintenance';
     }
     
-    return {
+    const recommendation: RestartRecommendation = {
       appId: app.id,
       appName: app.name,
       recommendationScore,
@@ -347,6 +353,57 @@ async function analyzeApp(app: ReplitApp): Promise<RestartRecommendation | null>
       recommendedTimeWindow,
       memoryLeakLikelihood: Math.round(healthMetrics.memoryLeakLikelihood)
     };
+    
+    // Add AI-powered analysis if available
+    try {
+      // Only perform AI analysis if the recommendation score is high enough to warrant it
+      if (recommendationScore >= 50 && process.env.ANTHROPIC_API_KEY) {
+        console.log(`Performing AI analysis for app ${app.id} with score ${recommendationScore}`);
+        
+        const aiAnalysis = await analyzeAppWithAI(app, logs, healthMetrics, recommendation);
+        
+        if (aiAnalysis.aiInsights && aiAnalysis.aiInsights.length > 0) {
+          recommendation.aiInsights = aiAnalysis.aiInsights;
+        }
+        
+        // Enhance the recommendation with AI suggestions if provided
+        if (aiAnalysis.enhancedRecommendation) {
+          const enhancements = aiAnalysis.enhancedRecommendation;
+          
+          // Only override values if the AI has high confidence
+          if (enhancements.urgency) {
+            recommendation.urgency = enhancements.urgency as 'low' | 'medium' | 'high' | 'critical';
+          }
+          
+          if (enhancements.predictedIssues && enhancements.predictedIssues.length > 0) {
+            recommendation.predictedIssues = enhancements.predictedIssues;
+          }
+          
+          if (enhancements.recommendedTimeWindow) {
+            recommendation.recommendedTimeWindow = enhancements.recommendedTimeWindow;
+          }
+          
+          if (enhancements.recommendationScore) {
+            // Blend the original score with the AI-suggested score (70% original, 30% AI)
+            recommendation.recommendationScore = Math.round(
+              recommendation.recommendationScore * 0.7 + enhancements.recommendationScore * 0.3
+            );
+            
+            // Set the confidence score from the AI
+            recommendation.confidenceScore = 80; // Default confidence value
+          }
+          
+          if (enhancements.alternativeSolutions) {
+            recommendation.alternativeSolutions = enhancements.alternativeSolutions;
+          }
+        }
+      }
+    } catch (aiError) {
+      console.error(`Error during AI analysis for app ${app.id}:`, aiError);
+      // Continue with the regular recommendation even if AI analysis fails
+    }
+    
+    return recommendation;
   } catch (error) {
     console.error(`Error analyzing app ${app.id}:`, error);
     return null;

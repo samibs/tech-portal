@@ -16,7 +16,10 @@ import {
   TrendingUp,
   ChevronDown,
   ChevronUp,
-  LineChart
+  LineChart,
+  Lightbulb,
+  BrainCircuit,
+  Sparkles
 } from "lucide-react";
 import {
   Collapsible,
@@ -281,6 +284,44 @@ export default function RecommendationsCard({ onAppRestarted }: RecommendationsC
                       <ul className="list-none pl-1 text-gray-500 dark:text-gray-400 space-y-1">
                         {recommendation.statusHistory.map((status, idx) => (
                           <li key={idx}>{status}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+                
+                {recommendation.aiInsights && recommendation.aiInsights.length > 0 && (
+                  <div className="flex items-start text-xs mt-3 pt-3 border-t border-dashed border-gray-200 dark:border-gray-700">
+                    <BrainCircuit className="h-4 w-4 mr-2 text-purple-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium flex items-center">
+                        AI Analysis
+                        {recommendation.confidenceScore && (
+                          <span className="ml-2 text-xs px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900 rounded text-purple-800 dark:text-purple-300">
+                            {recommendation.confidenceScore}% confidence
+                          </span>
+                        )}
+                      </p>
+                      <ul className="mt-1.5 space-y-2">
+                        {recommendation.aiInsights.map((insight, idx) => (
+                          <li key={idx} className="flex items-start text-gray-600 dark:text-gray-300">
+                            <Lightbulb className="h-3.5 w-3.5 mr-2 text-amber-500 shrink-0 mt-0.5" />
+                            <span>{insight}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+                
+                {recommendation.alternativeSolutions && recommendation.alternativeSolutions.length > 0 && (
+                  <div className="flex items-start text-xs mt-2">
+                    <Sparkles className="h-4 w-4 mr-2 text-blue-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Alternative Solutions:</p>
+                      <ul className="list-disc list-inside pl-1 text-gray-500 dark:text-gray-400 space-y-1">
+                        {recommendation.alternativeSolutions.map((solution, idx) => (
+                          <li key={idx}>{solution}</li>
                         ))}
                       </ul>
                     </div>
