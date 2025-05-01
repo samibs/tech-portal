@@ -100,6 +100,15 @@ export const settings = pgTable("settings", {
   cleanupGhostProcesses: boolean("cleanup_ghost_processes").notNull().default(false), // Whether to automatically kill ghost processes
   sendToastNotifications: boolean("send_toast_notifications").notNull().default(true),
   endpointTimeout: integer("endpoint_timeout").notNull().default(5000), // in milliseconds
+  
+  // Email notification settings
+  enableEmails: boolean("enable_emails").notNull().default(false),
+  emailAddress: text("email_address"),
+  smtpHost: text("smtp_host"),
+  smtpPort: integer("smtp_port").default(587),
+  smtpUser: text("smtp_user"),
+  smtpPassword: text("smtp_password"),
+  smtpSender: text("smtp_sender")
 });
 
 export const updateSettingsSchema = createInsertSchema(settings)
@@ -115,6 +124,15 @@ export const updateSettingsSchema = createInsertSchema(settings)
     cleanupGhostProcesses: true,
     sendToastNotifications: true,
     endpointTimeout: true,
+    
+    // Email notification settings
+    enableEmails: true,
+    emailAddress: true,
+    smtpHost: true,
+    smtpPort: true,
+    smtpUser: true,
+    smtpPassword: true,
+    smtpSender: true,
   });
 
 export type UpdateSettings = z.infer<typeof updateSettingsSchema>;

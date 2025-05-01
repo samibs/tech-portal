@@ -9,6 +9,7 @@ import Predictions from "@/pages/predictions";
 import AppPrediction from "@/pages/app-prediction";
 import Notifications from "@/pages/notifications";
 import Endpoints from "@/pages/endpoints";
+import Integrations from "@/pages/integrations";
 import AppLogs from "@/pages/app-logs";
 import { ThemeProvider } from "next-themes";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/predictions/:appId" component={AppPrediction} />
       <Route path="/notifications" component={Notifications} />
       <Route path="/settings" component={Settings} />
+      <Route path="/integrations" component={Integrations} />
       <Route path="/endpoints" component={Endpoints} />
       <Route path="/endpoints/:appId" component={Endpoints} />
       <Route path="/logs/:appId" component={AppLogs} />
