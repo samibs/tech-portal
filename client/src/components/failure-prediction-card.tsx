@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { getAppPrediction, AppPredictionModel } from "@/lib/api";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { Link } from "wouter";
 import { ArrowLeftIcon } from "lucide-react";
 
 interface FailurePredictionCardProps {
@@ -17,7 +17,6 @@ interface FailurePredictionCardProps {
 
 export default function FailurePredictionCard({ appId }: FailurePredictionCardProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [, setLocation] = useLocation();
   
   const { data: prediction, isLoading, isError } = useQuery({
     queryKey: ['/api/apps', appId, 'prediction'],
@@ -65,21 +64,28 @@ export default function FailurePredictionCard({ appId }: FailurePredictionCardPr
     }));
   };
 
+  // Back button component to ensure consistent design
+  const BackButton = () => (
+    <div className="flex items-center mb-2">
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="mr-2 -ml-2" 
+        asChild
+      >
+        <Link to="/predictions">
+          <ArrowLeftIcon className="h-4 w-4 mr-2" />
+          Back to Predictions
+        </Link>
+      </Button>
+    </div>
+  );
+
   if (isLoading) {
     return (
       <Card className="shadow-md">
         <CardHeader>
-          <div className="flex items-center mb-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="mr-2 -ml-2" 
-              onClick={() => setLocation("/predictions")}
-            >
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
-              Back to Predictions
-            </Button>
-          </div>
+          <BackButton />
           <CardTitle>
             <Skeleton className="h-8 w-64" />
           </CardTitle>
@@ -98,17 +104,7 @@ export default function FailurePredictionCard({ appId }: FailurePredictionCardPr
     return (
       <Card className="shadow-md border-red-300">
         <CardHeader>
-          <div className="flex items-center mb-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="mr-2 -ml-2" 
-              onClick={() => setLocation("/predictions")}
-            >
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
-              Back to Predictions
-            </Button>
-          </div>
+          <BackButton />
           <CardTitle>Failure Prediction Unavailable</CardTitle>
           <CardDescription>
             Unable to generate prediction data for this application
@@ -131,17 +127,7 @@ export default function FailurePredictionCard({ appId }: FailurePredictionCardPr
   return (
     <Card className="shadow-md">
       <CardHeader>
-        <div className="flex items-center mb-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="mr-2 -ml-2" 
-            onClick={() => setLocation("/predictions")}
-          >
-            <ArrowLeftIcon className="h-4 w-4 mr-2" />
-            Back to Predictions
-          </Button>
-        </div>
+        <BackButton />
         <CardTitle className="flex justify-between items-center">
           <span>Failure Prediction for {prediction.appName}</span>
           {hasPrediction && (
