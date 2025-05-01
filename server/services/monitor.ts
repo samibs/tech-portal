@@ -1,9 +1,19 @@
 import fetch from "node-fetch";
 import net from "net";
 import { storage } from "../storage";
-import { ReplitApp, AppStatus } from "@shared/schema";
+import { 
+  ReplitApp, 
+  AppStatus, 
+  Endpoint, 
+  EndpointStatus,
+  AppPort,
+  AppProcess
+} from "@shared/schema";
 
 let monitorInterval: NodeJS.Timeout | null = null;
+let endpointMonitorInterval: NodeJS.Timeout | null = null;
+let portMonitorInterval: NodeJS.Timeout | null = null;
+let processMonitorInterval: NodeJS.Timeout | null = null;
 let isMonitoring = false;
 
 // Start the monitoring service

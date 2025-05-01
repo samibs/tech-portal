@@ -2,7 +2,15 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { z } from "zod";
 import { storage } from "./storage";
-import { insertAppSchema, updateSettingsSchema, AppStatus } from "@shared/schema";
+import { 
+  insertAppSchema, 
+  updateSettingsSchema, 
+  AppStatus,
+  insertEndpointSchema,
+  insertAppPortSchema,
+  insertAppProcessSchema,
+  EndpointStatus
+} from "@shared/schema";
 import { startMonitoring, stopMonitoring, updateCheckFrequency } from "./services/monitor";
 import { startApp, stopApp, restartApp } from "./services/controller";
 import { 
@@ -378,6 +386,247 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error(`Error generating prediction for app ${req.params.id}:`, error);
       res.status(500).json({ message: "Failed to generate app prediction" });
+    }
+  });
+
+  // ENDPOINT MANAGEMENT
+  
+  // Get all endpoints (optionally filtered by app)
+  app.get("/api/endpoints", async (req: Request, res: Response) => {
+    try {
+      const appId = req.query.appId ? parseInt(req.query.appId as string) : undefined;
+      const endpoints = await storage.getEndpoints(appId);
+      res.json(endpoints);
+    } catch (error) {
+      console.error("Error fetching endpoints:", error);
+      res.status(500).json({ message: "Failed to fetch endpoints" });
+    }
+  });
+  
+  // Get endpoints for a specific app
+  app.get("/api/apps/:id/endpoints", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid app ID" });
+      }
+      
+      const app = await storage.getApp(id);
+      if (!app) {
+        return res.status(404).json({ message: "App not found" });
+      }
+      
+      const endpoints = await storage.getEndpoints(id);
+      res.json(endpoints);
+    } catch (error) {
+      console.error("Error fetching app endpoints:", error);
+      res.status(500).json({ message: "Failed to fetch app endpoints" });
+    }
+  });
+  
+  // Get a specific endpoint
+  app.get("/api/endpoints/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid endpoint ID" });
+      }
+      
+      const endpoint = await storage.getEndpoint(id);
+      if (!endpoint) {
+        return res.status(404).json({ message: "Endpoint not found" });
+      }
+      
+      res.json(endpoint);
+    } catch (error) {
+      console.error("Error fetching endpoint:", error);
+      res.status(500).json({ message: "Failed to fetch endpoint" });
+    }
+  });
+  
+  // Create a new endpoint
+  app.post("/api/endpoints", async (req: Request, res: Response) => {
+    try {
+      const validationResult = insertEndpointSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid endpoint data", 
+          errors: validationResult.error.format() 
+        });
+      }
+      
+      // Validate that the app exists
+      const app = await storage.getApp(validationResult.data.appId);
+      if (!app) {
+        return res.status(404).json({ message: "App not found" });
+      }
+      
+      const endpoint = await storage.createEndpoint(validationResult.data);
+      res.status(201).json(endpoint);
+    } catch (error) {
+      console.error("Error creating endpoint:", error);
+      res.status(500).json({ message: "Failed to create endpoint" });
+    }
+  });
+  
+  // Update an endpoint
+  app.patch("/api/endpoints/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid endpoint ID" });
+      }
+      
+      const endpoint = await storage.getEndpoint(id);
+      if (!endpoint) {
+        return res.status(404).json({ message: "Endpoint not found" });
+      }
+      
+      const updatedEndpoint = await storage.updateEndpoint(id, req.body);
+      res.json(updatedEndpoint);
+    } catch (error) {
+      console.error("Error updating endpoint:", error);
+      res.status(500).json({ message: "Failed to update endpoint" });
+    }
+  });
+  
+  // Delete an endpoint
+  app.delete("/api/endpoints/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid endpoint ID" });
+      }
+      
+      const success = await storage.deleteEndpoint(id);
+      if (!success) {
+        return res.status(404).json({ message: "Endpoint not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting endpoint:", error);
+      res.status(500).json({ message: "Failed to delete endpoint" });
+    }
+  });
+  
+  // PORT MANAGEMENT
+  
+  // Get all ports (optionally filtered by app)
+  app.get("/api/ports", async (req: Request, res: Response) => {
+    try {
+      const appId = req.query.appId ? parseInt(req.query.appId as string) : undefined;
+      const ports = await storage.getPorts(appId);
+      res.json(ports);
+    } catch (error) {
+      console.error("Error fetching ports:", error);
+      res.status(500).json({ message: "Failed to fetch ports" });
+    }
+  });
+  
+  // Get ports for a specific app
+  app.get("/api/apps/:id/ports", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid app ID" });
+      }
+      
+      const app = await storage.getApp(id);
+      if (!app) {
+        return res.status(404).json({ message: "App not found" });
+      }
+      
+      const ports = await storage.getPorts(id);
+      res.json(ports);
+    } catch (error) {
+      console.error("Error fetching app ports:", error);
+      res.status(500).json({ message: "Failed to fetch app ports" });
+    }
+  });
+  
+  // Check port availability
+  app.get("/api/ports/check/:port", async (req: Request, res: Response) => {
+    try {
+      const port = parseInt(req.params.port);
+      if (isNaN(port)) {
+        return res.status(400).json({ message: "Invalid port number" });
+      }
+      
+      const isAvailable = await storage.checkPortAvailability(port);
+      res.json({ 
+        port, 
+        available: isAvailable,
+        message: isAvailable 
+          ? `Port ${port} is available` 
+          : `Port ${port} is currently in use`
+      });
+    } catch (error) {
+      console.error("Error checking port availability:", error);
+      res.status(500).json({ message: "Failed to check port availability" });
+    }
+  });
+  
+  // PROCESS MANAGEMENT
+  
+  // Get all processes (optionally filtered by app)
+  app.get("/api/processes", async (req: Request, res: Response) => {
+    try {
+      const appId = req.query.appId ? parseInt(req.query.appId as string) : undefined;
+      const processes = await storage.getProcesses(appId);
+      res.json(processes);
+    } catch (error) {
+      console.error("Error fetching processes:", error);
+      res.status(500).json({ message: "Failed to fetch processes" });
+    }
+  });
+  
+  // Get processes for a specific app
+  app.get("/api/apps/:id/processes", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid app ID" });
+      }
+      
+      const app = await storage.getApp(id);
+      if (!app) {
+        return res.status(404).json({ message: "App not found" });
+      }
+      
+      const processes = await storage.getProcesses(id);
+      res.json(processes);
+    } catch (error) {
+      console.error("Error fetching app processes:", error);
+      res.status(500).json({ message: "Failed to fetch app processes" });
+    }
+  });
+  
+  // Terminate ghost processes for an app
+  app.post("/api/apps/:id/terminate-ghost-processes", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid app ID" });
+      }
+      
+      const app = await storage.getApp(id);
+      if (!app) {
+        return res.status(404).json({ message: "App not found" });
+      }
+      
+      const count = await storage.terminateGhostProcesses(id);
+      res.json({ 
+        success: true, 
+        terminatedCount: count,
+        message: count === 0 
+          ? "No ghost processes found" 
+          : `Successfully terminated ${count} ghost processes`
+      });
+    } catch (error) {
+      console.error("Error terminating ghost processes:", error);
+      res.status(500).json({ message: "Failed to terminate ghost processes" });
     }
   });
 
