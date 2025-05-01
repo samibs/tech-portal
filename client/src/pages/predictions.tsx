@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FailurePredictionCard from "@/components/failure-prediction-card";
 import { getAllPredictions, getAppPrediction, AppPredictionModel } from "@/lib/api";
 import { ArrowRightIcon, AlertCircleIcon, TrendingUpIcon, ClockIcon, AlertTriangleIcon, RefreshCwIcon, ArrowLeftIcon } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 
 export default function PredictionsPage() {
   const { appId } = useParams();
@@ -97,8 +97,6 @@ export default function PredictionsPage() {
     );
   }
   
-  const [, setLocation] = useLocation();
-
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -107,10 +105,12 @@ export default function PredictionsPage() {
             variant="ghost" 
             size="sm" 
             className="mr-4" 
-            onClick={() => setLocation('/')}
+            asChild
           >
-            <ArrowLeftIcon className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            <Link to="/">
+              <ArrowLeftIcon className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Link>
           </Button>
           <h1 className="text-3xl font-bold tracking-tight">Application Predictions</h1>
         </div>
@@ -274,7 +274,6 @@ interface PredictionSummaryCardProps {
 }
 
 function PredictionSummaryCard({ prediction }: PredictionSummaryCardProps) {
-  const [, setLocation] = useLocation();
   const failureProbability = Math.round(prediction.aggregatedFailureProbability * 100);
   
   const getFailureProbabilityColor = (probability: number) => {
@@ -282,10 +281,6 @@ function PredictionSummaryCard({ prediction }: PredictionSummaryCardProps) {
     if (probability >= 0.4) return 'text-orange-600 dark:text-orange-400';
     if (probability >= 0.2) return 'text-yellow-600 dark:text-yellow-400';
     return 'text-green-600 dark:text-green-400';
-  };
-  
-  const handleViewDetails = () => {
-    setLocation(`/predictions/${prediction.appId}`);
   };
   
   return (
@@ -333,9 +328,11 @@ function PredictionSummaryCard({ prediction }: PredictionSummaryCardProps) {
             size="sm" 
             variant="secondary" 
             className="w-full mt-2"
-            onClick={handleViewDetails}
+            asChild
           >
-            View Details
+            <Link to={`/predictions/${prediction.appId}`}>
+              View Details
+            </Link>
           </Button>
         </div>
       </CardContent>
