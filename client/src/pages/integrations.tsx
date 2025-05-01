@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import Sidebar from '@/components/layout/sidebar';
@@ -217,6 +218,7 @@ export default function IntegrationsPage() {
                                 onChange={(e) => setSmtpPort(parseInt(e.target.value))}
                                 placeholder="587"
                                 className="mt-1"
+                                disabled={!enableEmails}
                               />
                             </div>
                             
@@ -231,6 +233,7 @@ export default function IntegrationsPage() {
                                 onChange={(e) => setSmtpUser(e.target.value)}
                                 placeholder="username@example.com"
                                 className="mt-1"
+                                disabled={!enableEmails}
                               />
                             </div>
                             
@@ -246,6 +249,7 @@ export default function IntegrationsPage() {
                                 onChange={(e) => setSmtpPassword(e.target.value)}
                                 placeholder="••••••••"
                                 className="mt-1"
+                                disabled={!enableEmails}
                               />
                             </div>
                             
@@ -258,6 +262,7 @@ export default function IntegrationsPage() {
                                 onChange={(e) => setSmtpSender(e.target.value)}
                                 placeholder="notifications@yourdomain.com"
                                 className="mt-1"
+                                disabled={!enableEmails}
                               />
                               <p className="text-xs text-muted-foreground mt-1">
                                 The email address that will appear as the sender
