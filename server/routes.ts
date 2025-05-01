@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { insertAppSchema, updateSettingsSchema, AppStatus } from "@shared/schema";
 import { startMonitoring, stopMonitoring, updateCheckFrequency } from "./services/monitor";
 import { startApp, stopApp, restartApp } from "./services/controller";
+import { getRestartRecommendations, getAppRestartRecommendation } from "./services/recommendation";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize monitoring service
@@ -290,6 +291,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching stats:", error);
       res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Get restart recommendations for all apps
+  app.get("/api/recommendations", async (req: Request, res: Response) => {
+    try {
+      const recommendations = await getRestartRecommendations();
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error fetching restart recommendations:", error);
+      res.status(500).json({ message: "Failed to fetch restart recommendations" });
+    }
+  });
+
+  // Get restart recommendation for a specific app
+  app.get("/api/apps/:id/recommendation", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid app ID" });
+      }
+      
+      const app = await storage.getApp(id);
+      if (!app) {
+        return res.status(404).json({ message: "App not found" });
+      }
+      
+      const recommendation = await getAppRestartRecommendation(id);
+      if (!recommendation) {
+        return res.json({ 
+          message: "No restart recommendation available",
+          appId: id,
+          appName: app.name,
+          recommendationScore: 0
+        });
+      }
+      
+      res.json(recommendation);
+    } catch (error) {
+      console.error("Error fetching app restart recommendation:", error);
+      res.status(500).json({ message: "Failed to fetch restart recommendation" });
     }
   });
 

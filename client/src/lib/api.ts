@@ -69,3 +69,24 @@ export async function getLogs() {
   const res = await apiRequest("GET", "/api/logs");
   return res.json();
 }
+
+// Recommendation engine API
+export interface RestartRecommendation {
+  appId: number;
+  appName: string;
+  recommendationScore: number; // 0-100, higher means stronger recommendation
+  reason: string;
+  lastRestarted: Date | null;
+  statusHistory: string[];
+  uptime: number; // in minutes
+}
+
+export async function getRestartRecommendations() {
+  const res = await apiRequest("GET", "/api/recommendations");
+  return res.json();
+}
+
+export async function getAppRestartRecommendation(id: number) {
+  const res = await apiRequest("GET", `/api/apps/${id}/recommendation`);
+  return res.json();
+}
