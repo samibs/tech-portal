@@ -15,6 +15,7 @@ import { EndpointStatus } from "@shared/schema";
 import { toast } from "@/hooks/use-toast";
 import { AlertTriangle, CheckCircle, Clock, RefreshCw, Trash2, Edit, PlusCircle, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
+import type { Endpoint } from "@shared/schema";
 
 function EndpointStatusBadge({ status }: { status: EndpointStatus }) {
   switch (status) {
@@ -69,7 +70,7 @@ function AddEndpointDialog({ appId }: { appId?: number }) {
     description: "",
   });
 
-  const { data: apps } = useQuery({
+  const { data: apps = [] } = useQuery<any[]>({
     queryKey: ["/api/apps"],
     enabled: !appId,
   });
@@ -219,7 +220,7 @@ function AddEndpointDialog({ appId }: { appId?: number }) {
 }
 
 export default function EndpointsPage() {
-  const { data: endpoints, isLoading } = useQuery({
+  const { data: endpoints = [], isLoading } = useQuery<Endpoint[]>({
     queryKey: ["/api/endpoints"],
   });
 

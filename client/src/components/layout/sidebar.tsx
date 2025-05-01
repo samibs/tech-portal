@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
-import { BarChart2, Bell, Settings, HelpCircle, Zap, ChevronDown, TrendingUp } from "lucide-react";
+import { BarChart2, Bell, Settings, HelpCircle, Zap, ChevronDown, TrendingUp, Globe } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -43,6 +43,12 @@ export default function Sidebar({ mobileMenuOpen, closeMobileMenu }: SidebarProp
             <div className="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-primary-600 hover:text-white cursor-pointer">
               <Bell className="mr-3 h-5 w-5 text-gray-400" />
               Notifications
+            </div>
+          </Link>
+          <Link href="/endpoints">
+            <div className="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-primary-600 hover:text-white cursor-pointer">
+              <Globe className="mr-3 h-5 w-5 text-gray-400" />
+              Endpoints
             </div>
           </Link>
           <Link href="/settings">
