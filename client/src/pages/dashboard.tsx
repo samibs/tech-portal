@@ -7,6 +7,7 @@ import AppCard from '@/components/app-card';
 import AddAppDialog from '@/components/add-app-dialog';
 import ChangeFrequencyDialog from '@/components/change-frequency-dialog';
 import RecommendationsCard from '@/components/recommendations-card';
+import ActivityTimeline from '@/components/activity-timeline';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -99,14 +100,21 @@ export default function Dashboard() {
             isLoading={isLoading} 
           />
 
-          {/* Recommendations */}
-          <div className="px-4 sm:px-6 lg:px-8 pt-4">
-            <RecommendationsCard 
-              onAppRestarted={() => {
-                refetchApps();
-                refetchStats();
-              }} 
-            />
+          <div className="px-4 sm:px-6 lg:px-8 pt-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Recommendations - takes up 1/3 of the width on large screens */}
+            <div className="lg:col-span-1">
+              <RecommendationsCard 
+                onAppRestarted={() => {
+                  refetchApps();
+                  refetchStats();
+                }} 
+              />
+            </div>
+            
+            {/* Activity Timeline - takes up 2/3 of the width on large screens */}
+            <div className="lg:col-span-2">
+              <ActivityTimeline />
+            </div>
           </div>
           
           {/* App list */}

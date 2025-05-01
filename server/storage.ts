@@ -17,7 +17,7 @@ export interface IStorage {
   updateSettings(updates: Partial<Settings>): Promise<Settings>;
   
   // Logs management
-  getLogs(appId?: number): Promise<LogEntry[]>;
+  getLogs(appId?: number): Promise<(LogEntry & { appName?: string })[]>;
   createLog(log: InsertLog): Promise<LogEntry>;
 }
 
@@ -140,19 +140,41 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Logs methods
-  async getLogs(appId?: number): Promise<LogEntry[]> {
+  async getLogs(appId?: number): Promise<(LogEntry & { appName?: string })[]> {
     if (appId) {
-      return await db.select()
+      const logs = await db.select({
+          id: logEntries.id,
+          appId: logEntries.appId,
+          action: logEntries.action,
+          details: logEntries.details,
+          status: logEntries.status,
+          timestamp: logEntries.timestamp,
+          appName: replitApps.name
+        })
         .from(logEntries)
+        .leftJoin(replitApps, eq(logEntries.appId, replitApps.id))
         .where(eq(logEntries.appId, appId))
         .orderBy(desc(logEntries.timestamp))
         .limit(1000);
+      
+      return logs as (LogEntry & { appName?: string })[];
     }
     
-    return await db.select()
+    const logs = await db.select({
+        id: logEntries.id,
+        appId: logEntries.appId,
+        action: logEntries.action,
+        details: logEntries.details,
+        status: logEntries.status,
+        timestamp: logEntries.timestamp,
+        appName: replitApps.name
+      })
       .from(logEntries)
+      .leftJoin(replitApps, eq(logEntries.appId, replitApps.id))
       .orderBy(desc(logEntries.timestamp))
       .limit(1000);
+    
+    return logs as (LogEntry & { appName?: string })[];
   }
 
   async createLog(log: InsertLog): Promise<LogEntry> {
