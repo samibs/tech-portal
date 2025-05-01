@@ -274,6 +274,7 @@ interface PredictionSummaryCardProps {
 }
 
 function PredictionSummaryCard({ prediction }: PredictionSummaryCardProps) {
+  const [, setLocation] = useLocation();
   const failureProbability = Math.round(prediction.aggregatedFailureProbability * 100);
   
   const getFailureProbabilityColor = (probability: number) => {
@@ -281,6 +282,10 @@ function PredictionSummaryCard({ prediction }: PredictionSummaryCardProps) {
     if (probability >= 0.4) return 'text-orange-600 dark:text-orange-400';
     if (probability >= 0.2) return 'text-yellow-600 dark:text-yellow-400';
     return 'text-green-600 dark:text-green-400';
+  };
+  
+  const handleViewDetails = () => {
+    setLocation(`/predictions/${prediction.appId}`);
   };
   
   return (
@@ -324,10 +329,13 @@ function PredictionSummaryCard({ prediction }: PredictionSummaryCardProps) {
             </div>
           )}
           
-          <Button size="sm" variant="secondary" asChild className="w-full mt-2">
-            <Link to={`/predictions/${prediction.appId}`}>
-              View Details
-            </Link>
+          <Button 
+            size="sm" 
+            variant="secondary" 
+            className="w-full mt-2"
+            onClick={handleViewDetails}
+          >
+            View Details
           </Button>
         </div>
       </CardContent>
