@@ -12,7 +12,7 @@ import {
   EndpointStatus
 } from "@shared/schema";
 import { startMonitoring, stopMonitoring, updateCheckFrequency } from "./services/monitor";
-import { startApp, stopApp, restartApp } from "./services/controller";
+import { startApp, stopApp, restartApp, terminateGhostProcesses } from "./services/controller";
 import { 
   getRestartRecommendations, 
   getAppRestartRecommendation,
@@ -616,14 +616,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "App not found" });
       }
       
-      const count = await storage.terminateGhostProcesses(id);
-      res.json({ 
-        success: true, 
-        terminatedCount: count,
-        message: count === 0 
-          ? "No ghost processes found" 
-          : `Successfully terminated ${count} ghost processes`
-      });
+      // Check if ghost process monitoring is enabled
+      if (!app.checkForGhostProcesses) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Ghost process detection is not enabled for this app" 
+        });
+      }
+      
+      // Use the controller service to terminate ghost processes
+      const result = await terminateGhostProcesses(app);
+      
+      if (result.success) {
+        res.json({ 
+          success: true, 
+          terminatedCount: result.terminatedCount,
+          message: result.terminatedCount === 0 
+            ? "No ghost processes found" 
+            : `Successfully terminated ${result.terminatedCount} ghost processes`,
+          simulation: true,
+          details: "Note: This is a simulation of ghost process termination. In a production environment, this would connect to the actual Replit API."
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          terminatedCount: 0,
+          message: result.error || "Failed to terminate ghost processes",
+          simulation: true
+        });
+      }
     } catch (error) {
       console.error("Error terminating ghost processes:", error);
       res.status(500).json({ message: "Failed to terminate ghost processes" });
