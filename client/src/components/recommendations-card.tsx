@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { RestartRecommendation, getRestartRecommendations, restartApp } from "@/lib/api";
 import { formatDistanceToNow } from "date-fns";
+import { Link } from "wouter";
 import { 
   AlertTriangle, 
   RotateCw, 
@@ -14,7 +15,8 @@ import {
   ArrowUpCircle,
   TrendingUp,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  LineChart
 } from "lucide-react";
 import {
   Collapsible,
@@ -145,6 +147,14 @@ export default function RecommendationsCard({ onAppRestarted }: RecommendationsC
             All applications appear to be running optimally. The system will continue to monitor for any changes in performance.
           </p>
         </CardContent>
+        <CardFooter>
+          <Link href="/predictions" className="w-full">
+            <Button variant="outline" size="sm" className="w-full">
+              <LineChart className="mr-2 h-4 w-4" />
+              View Advanced Predictions
+            </Button>
+          </Link>
+        </CardFooter>
       </Card>
     );
   }
@@ -300,13 +310,19 @@ export default function RecommendationsCard({ onAppRestarted }: RecommendationsC
           </Collapsible>
         ))}
       </CardContent>
-      {recommendations.length > 3 && (
-        <CardFooter>
+      <CardFooter className="flex flex-col gap-2">
+        {recommendations.length > 3 && (
           <Button variant="ghost" size="sm" className="w-full">
             View All Recommendations ({recommendations.length})
           </Button>
-        </CardFooter>
-      )}
+        )}
+        <Link href="/predictions" className="w-full">
+          <Button variant="outline" size="sm" className="w-full">
+            <LineChart className="mr-2 h-4 w-4" />
+            View Advanced Predictions
+          </Button>
+        </Link>
+      </CardFooter>
     </Card>
   );
 }
