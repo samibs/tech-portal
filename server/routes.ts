@@ -5,7 +5,12 @@ import { storage } from "./storage";
 import { insertAppSchema, updateSettingsSchema, AppStatus } from "@shared/schema";
 import { startMonitoring, stopMonitoring, updateCheckFrequency } from "./services/monitor";
 import { startApp, stopApp, restartApp } from "./services/controller";
-import { getRestartRecommendations, getAppRestartRecommendation } from "./services/recommendation";
+import { 
+  getRestartRecommendations, 
+  getAppRestartRecommendation,
+  generateAllAppPredictions,
+  generateAppPredictions
+} from "./services/recommendation";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize monitoring service
@@ -332,6 +337,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching app restart recommendation:", error);
       res.status(500).json({ message: "Failed to fetch restart recommendation" });
+    }
+  });
+
+  // Get failure predictions for all apps
+  app.get("/api/predictions", async (req: Request, res: Response) => {
+    try {
+      const predictions = await generateAllAppPredictions();
+      res.json(predictions);
+    } catch (error) {
+      console.error("Error generating predictions:", error);
+      res.status(500).json({ message: "Failed to generate predictions" });
+    }
+  });
+
+  // Get failure prediction for a specific app
+  app.get("/api/apps/:id/prediction", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid app ID" });
+      }
+      
+      const app = await storage.getApp(id);
+      if (!app) {
+        return res.status(404).json({ message: "App not found" });
+      }
+      
+      const prediction = await generateAppPredictions(id);
+      if (!prediction) {
+        return res.json({ 
+          message: "No prediction available",
+          appId: id,
+          appName: app.name,
+          aggregatedFailureProbability: 0
+        });
+      }
+      
+      res.json(prediction);
+    } catch (error) {
+      console.error(`Error generating prediction for app ${req.params.id}:`, error);
+      res.status(500).json({ message: "Failed to generate app prediction" });
     }
   });
 

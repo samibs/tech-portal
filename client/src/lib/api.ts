@@ -97,3 +97,77 @@ export async function getAppRestartRecommendation(id: number) {
   const res = await apiRequest("GET", `/api/apps/${id}/recommendation`);
   return res.json();
 }
+
+// Prediction API functions
+export interface FailurePredictionTimeSlot {
+  startTime: Date;
+  endTime: Date;
+  failureProbability: number; // 0-1
+  confidenceScore: number; // 0-100
+  predictedMetrics?: {
+    responseTime?: number;
+    errorRate?: number;
+    availabilityPercent?: number;
+    resourceUtilization?: number;
+  };
+  contributingFactors: string[];
+}
+
+export interface AppPredictionModel {
+  appId: number;
+  appName: string;
+  predictionGenerated: Date;
+  predictionTimeSlots: FailurePredictionTimeSlot[];
+  aggregatedFailureProbability: number; // 0-1
+  recommendedActions: string[];
+  highRiskPeriods: {
+    startTime: Date;
+    endTime: Date;
+    risk: 'low' | 'medium' | 'high' | 'critical';
+    description: string;
+  }[];
+}
+
+export async function getAllPredictions() {
+  const res = await apiRequest("GET", "/api/predictions");
+  const data = await res.json();
+  
+  // Convert string dates to Date objects
+  return data.map((prediction: any) => ({
+    ...prediction,
+    predictionGenerated: new Date(prediction.predictionGenerated),
+    predictionTimeSlots: prediction.predictionTimeSlots.map((slot: any) => ({
+      ...slot,
+      startTime: new Date(slot.startTime),
+      endTime: new Date(slot.endTime)
+    })),
+    highRiskPeriods: prediction.highRiskPeriods.map((period: any) => ({
+      ...period,
+      startTime: new Date(period.startTime),
+      endTime: new Date(period.endTime)
+    }))
+  }));
+}
+
+export async function getAppPrediction(id: number) {
+  const res = await apiRequest("GET", `/api/apps/${id}/prediction`);
+  const prediction = await res.json();
+  
+  // Convert string dates to Date objects
+  return {
+    ...prediction,
+    predictionGenerated: prediction.predictionGenerated ? new Date(prediction.predictionGenerated) : null,
+    predictionTimeSlots: prediction.predictionTimeSlots ? 
+      prediction.predictionTimeSlots.map((slot: any) => ({
+        ...slot,
+        startTime: new Date(slot.startTime),
+        endTime: new Date(slot.endTime)
+      })) : [],
+    highRiskPeriods: prediction.highRiskPeriods ? 
+      prediction.highRiskPeriods.map((period: any) => ({
+        ...period,
+        startTime: new Date(period.startTime),
+        endTime: new Date(period.endTime)
+      })) : []
+  };
+}
