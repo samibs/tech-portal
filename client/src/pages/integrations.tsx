@@ -285,11 +285,12 @@ export default function IntegrationsPage() {
                               onChange={(e) => setTestEmailAddress(e.target.value)}
                               placeholder="recipient@example.com"
                               className="mt-1"
+                              disabled={!enableEmails}
                             />
                           </div>
                           <Button 
                             onClick={handleTestEmail} 
-                            disabled={isTesting || !smtpHost || !smtpUser || !smtpPassword}
+                            disabled={!enableEmails || isTesting || !smtpHost || !smtpUser || !smtpPassword}
                             variant="outline"
                           >
                             {isTesting ? "Sending..." : "Send Test Email"}
