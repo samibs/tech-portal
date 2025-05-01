@@ -6,9 +6,11 @@ import Dashboard from "@/pages/dashboard";
 import Applications from "@/pages/applications";
 import Settings from "@/pages/settings";
 import Predictions from "@/pages/predictions";
+import Notifications from "@/pages/notifications";
 import { ThemeProvider } from "next-themes";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 
 function Router() {
   return (
