@@ -205,3 +205,76 @@ export async function getAppPrediction(id: number) {
       })) : []
   };
 }
+
+// Endpoints API
+export async function getEndpoints() {
+  const res = await apiRequest("/api/endpoints");
+  return res.json();
+}
+
+export async function getAppEndpoints(appId: number) {
+  const res = await apiRequest(`/api/apps/${appId}/endpoints`);
+  return res.json();
+}
+
+export async function getEndpoint(id: number) {
+  const res = await apiRequest(`/api/endpoints/${id}`);
+  return res.json();
+}
+
+export async function createEndpoint(endpoint: any) {
+  const res = await apiRequest("/api/endpoints", {
+    method: "POST",
+    data: endpoint
+  });
+  return res.json();
+}
+
+export async function updateEndpoint(id: number, updates: any) {
+  const res = await apiRequest(`/api/endpoints/${id}`, {
+    method: "PATCH",
+    data: updates
+  });
+  return res.json();
+}
+
+export async function deleteEndpoint(id: number) {
+  const res = await apiRequest(`/api/endpoints/${id}`, {
+    method: "DELETE"
+  });
+  return res.json();
+}
+
+// Ports API
+export async function getPorts() {
+  const res = await apiRequest("/api/ports");
+  return res.json();
+}
+
+export async function getAppPorts(appId: number) {
+  const res = await apiRequest(`/api/apps/${appId}/ports`);
+  return res.json();
+}
+
+export async function checkPortAvailability(port: number) {
+  const res = await apiRequest(`/api/ports/check/${port}`);
+  return res.json();
+}
+
+// Processes API
+export async function getProcesses() {
+  const res = await apiRequest("/api/processes");
+  return res.json();
+}
+
+export async function getAppProcesses(appId: number) {
+  const res = await apiRequest(`/api/apps/${appId}/processes`);
+  return res.json();
+}
+
+export async function terminateGhostProcesses(appId: number) {
+  const res = await apiRequest(`/api/apps/${appId}/terminate-ghost-processes`, {
+    method: "POST"
+  });
+  return res.json();
+}
