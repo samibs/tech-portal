@@ -19,7 +19,7 @@ export default function FailurePredictionCard({ appId }: FailurePredictionCardPr
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   
   const { data: prediction, isLoading, isError } = useQuery({
-    queryKey: ['/api/apps', appId, 'prediction'],
+    queryKey: [`/api/apps/${appId}/prediction`],
     queryFn: () => getAppPrediction(appId),
     refetchInterval: 1000 * 60 * 5, // Refresh every 5 minutes
     enabled: !!appId,
