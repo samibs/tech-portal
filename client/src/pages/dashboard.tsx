@@ -6,6 +6,7 @@ import DashboardStats from '@/components/dashboard-stats';
 import AppCard from '@/components/app-card';
 import AddAppDialog from '@/components/add-app-dialog';
 import ChangeFrequencyDialog from '@/components/change-frequency-dialog';
+import RecommendationsCard from '@/components/recommendations-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -97,6 +98,16 @@ export default function Dashboard() {
             onChangeFrequency={() => setChangeFrequencyDialogOpen(true)} 
             isLoading={isLoading} 
           />
+
+          {/* Recommendations */}
+          <div className="px-4 sm:px-6 lg:px-8 pt-4">
+            <RecommendationsCard 
+              onAppRestarted={() => {
+                refetchApps();
+                refetchStats();
+              }} 
+            />
+          </div>
           
           {/* App list */}
           <div className="px-4 sm:px-6 lg:px-8 py-4">

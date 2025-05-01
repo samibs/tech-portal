@@ -69,9 +69,9 @@ export default function RecommendationsCard({ onAppRestarted }: RecommendationsC
   };
 
   const getProgressColor = (score: number) => {
-    if (score >= 70) return "bg-red-600";
-    if (score >= 40) return "bg-amber-600";
-    return "bg-green-600";
+    if (score >= 70) return "[&>div]:bg-red-600";
+    if (score >= 40) return "[&>div]:bg-amber-600";
+    return "[&>div]:bg-green-600";
   };
 
   if (loading) {
@@ -124,8 +124,7 @@ export default function RecommendationsCard({ onAppRestarted }: RecommendationsC
             
             <Progress 
               value={recommendation.recommendationScore} 
-              className="h-2 mb-2"
-              indicatorClassName={getProgressColor(recommendation.recommendationScore)}
+              className={`h-2 mb-2 ${getProgressColor(recommendation.recommendationScore)}`}
             />
             
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{recommendation.reason}</p>
