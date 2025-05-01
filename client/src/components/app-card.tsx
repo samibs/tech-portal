@@ -3,9 +3,11 @@ import { ReplitApp } from "@shared/schema";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 import { 
   Play, Square, RotateCw, FileText, 
-  MoreVertical, Pencil, ExternalLink, Trash2
+  MoreVertical, Pencil, ExternalLink, Trash2,
+  TrendingUp
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -180,63 +182,77 @@ export default function AppCard({ app, onStatusChange }: AppCardProps) {
             </div>
           </dl>
         </CardContent>
-        <CardFooter className="bg-gray-50 dark:bg-gray-800 px-4 py-4 sm:px-6 flex justify-between">
-          <div className="flex-1 mr-2">
-            {isRunning ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRestart}
-                disabled={isLoading}
-                className="w-full transition-all hover:shadow-md"
-              >
-                <RotateCw className={`-ml-0.5 mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Restart
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  toast({
-                    title: "View Logs",
-                    description: "Detailed logs view will be implemented soon.",
-                  });
-                }}
-                disabled={isLoading}
-                className="w-full transition-all hover:shadow-md"
-              >
-                <FileText className="-ml-0.5 mr-2 h-4 w-4" />
-                View Logs
-              </Button>
-            )}
+        <CardFooter className="bg-gray-50 dark:bg-gray-800 px-4 py-4 sm:px-6 flex flex-col gap-3">
+          <div className="flex justify-between gap-2">
+            <div className="flex-1">
+              {isRunning ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRestart}
+                  disabled={isLoading}
+                  className="w-full transition-all hover:shadow-md"
+                >
+                  <RotateCw className={`-ml-0.5 mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                  Restart
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    toast({
+                      title: "View Logs",
+                      description: "Detailed logs view will be implemented soon.",
+                    });
+                  }}
+                  disabled={isLoading}
+                  className="w-full transition-all hover:shadow-md"
+                >
+                  <FileText className="-ml-0.5 mr-2 h-4 w-4" />
+                  View Logs
+                </Button>
+              )}
+            </div>
+            
+            <div className="flex-1">
+              {isRunning ? (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleStop}
+                  disabled={isLoading}
+                  className="w-full transition-all hover:shadow-md"
+                >
+                  <Square className="-ml-0.5 mr-2 h-4 w-4" />
+                  Stop
+                </Button>
+              ) : (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleStart}
+                  disabled={isLoading}
+                  className="w-full transition-all hover:shadow-md"
+                >
+                  <Play className="-ml-0.5 mr-2 h-4 w-4" />
+                  Start
+                </Button>
+              )}
+            </div>
           </div>
           
-          <div className="flex-1">
-            {isRunning ? (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleStop}
-                disabled={isLoading}
-                className="w-full transition-all hover:shadow-md"
-              >
-                <Square className="-ml-0.5 mr-2 h-4 w-4" />
-                Stop
-              </Button>
-            ) : (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleStart}
-                disabled={isLoading}
-                className="w-full transition-all hover:shadow-md"
-              >
-                <Play className="-ml-0.5 mr-2 h-4 w-4" />
-                Start
-              </Button>
-            )}
-          </div>
+          <Button 
+            variant="secondary" 
+            size="sm" 
+            className="w-full transition-all hover:shadow-md"
+            asChild
+          >
+            <Link to={`/predictions/${app.id}`}>
+              <TrendingUp className="-ml-0.5 mr-2 h-4 w-4" />
+              View Predictions
+            </Link>
+          </Button>
         </CardFooter>
       </Card>
 

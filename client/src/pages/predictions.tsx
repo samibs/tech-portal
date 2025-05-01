@@ -5,10 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FailurePredictionCard from "@/components/failure-prediction-card";
 import { getAllPredictions, AppPredictionModel } from "@/lib/api";
-import { ArrowRightIcon, AlertCircleIcon, TrendingUpIcon, ClockIcon } from "lucide-react";
+import { ArrowRightIcon, AlertCircleIcon, TrendingUpIcon, ClockIcon, AlertTriangleIcon, RefreshCwIcon } from "lucide-react";
 import { Link } from "wouter";
 
 export default function PredictionsPage() {
@@ -74,11 +75,34 @@ export default function PredictionsPage() {
   const highestRiskApp = getHighestRiskApp();
   const mostImminentRisk = getMostImminentRisk();
 
+  if (isError) {
+    return (
+      <div className="container mx-auto py-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold tracking-tight">Application Predictions</h1>
+          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+            <RefreshCwIcon className="mr-2 h-4 w-4" />
+            Retry
+          </Button>
+        </div>
+        
+        <Alert variant="destructive">
+          <AlertTriangleIcon className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            Unable to load prediction data. Please try again later.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+  
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Application Predictions</h1>
-        <Button variant="secondary" size="sm" onClick={() => window.location.reload()}>
+        <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+          <RefreshCwIcon className="mr-2 h-4 w-4" />
           Refresh Predictions
         </Button>
       </div>
