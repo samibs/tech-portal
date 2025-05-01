@@ -158,11 +158,11 @@ export default function PredictionsPage() {
                 
                 <Button 
                   size="sm"
-                  onClick={() => {
-                    window.location.href = `/predictions/${highestRiskApp.appId}`;
-                  }}
+                  asChild
                 >
-                  View Prediction Details <ArrowRightIcon className="ml-2 h-4 w-4" />
+                  <Link to={`/predictions/${highestRiskApp.appId}`}>
+                    View Prediction Details <ArrowRightIcon className="ml-2 h-4 w-4" />
+                  </Link>
                 </Button>
               </div>
             </CardContent>
@@ -193,11 +193,11 @@ export default function PredictionsPage() {
                 
                 <Button 
                   size="sm"
-                  onClick={() => {
-                    window.location.href = `/predictions/${mostImminentRisk.appId}`;
-                  }}
+                  asChild
                 >
-                  View Full Prediction <ArrowRightIcon className="ml-2 h-4 w-4" />
+                  <Link to={`/predictions/${mostImminentRisk.appId}`}>
+                    View Full Prediction <ArrowRightIcon className="ml-2 h-4 w-4" />
+                  </Link>
                 </Button>
               </div>
             </CardContent>
@@ -334,11 +334,11 @@ function PredictionSummaryCard({ prediction }: PredictionSummaryCardProps) {
             size="sm" 
             variant="secondary" 
             className="w-full mt-2"
-            onClick={() => {
-              window.location.href = `/predictions/${prediction.appId}`;
-            }}
+            asChild
           >
-            View Details
+            <Link to={`/predictions/${prediction.appId}`}>
+              View Details
+            </Link>
           </Button>
         </div>
       </CardContent>

@@ -6,6 +6,7 @@ import Dashboard from "@/pages/dashboard";
 import Applications from "@/pages/applications";
 import Settings from "@/pages/settings";
 import Predictions from "@/pages/predictions";
+import AppPrediction from "@/pages/app-prediction";
 import Notifications from "@/pages/notifications";
 import Endpoints from "@/pages/endpoints";
 import AppLogs from "@/pages/app-logs";
@@ -22,7 +23,7 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/applications" component={Applications} />
       <Route path="/predictions" component={Predictions} />
-      <Route path="/predictions/:appId" component={Predictions} />
+      <Route path="/predictions/:appId" component={AppPrediction} />
       <Route path="/notifications" component={Notifications} />
       <Route path="/settings" component={Settings} />
       <Route path="/endpoints" component={Endpoints} />
