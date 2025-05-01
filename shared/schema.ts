@@ -45,6 +45,13 @@ export const replitApps = pgTable("replit_apps", {
   status: text("status").notNull().default("Stopped"), // Will use AppStatus enum
   lastLogs: text("last_logs"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  
+  // Performance metrics (added for prediction model)
+  averageResponseTime: integer("average_response_time"), // in milliseconds
+  resourceUsage: integer("resource_usage"), // percentage (0-100)
+  uptime: integer("uptime"), // in minutes
+  errorRate: integer("error_rate"), // percentage (0-100)
+  lastRestarted: timestamp("last_restarted"),
 });
 
 // Zod schema for app insert

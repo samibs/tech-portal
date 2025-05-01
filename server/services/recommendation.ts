@@ -9,6 +9,14 @@ const MAX_PATTERN_HISTORY_DAYS = 7; // How many days back to look for patterns
 const PEAK_HOURS_START = 8; // Peak hours start (24hr format)
 const PEAK_HOURS_END = 18; // Peak hours end (24hr format)
 const PERIODIC_RESTART_INTERVAL_DAYS = 3; // Recommended interval between preventative restarts
+const PREDICTION_WINDOW_HOURS = 24; // How many hours ahead to predict
+const FAILURE_PROBABILITY_THRESHOLD = 0.7; // Threshold for predicted failure probability to trigger alert (0-1)
+
+// Prediction model parameters
+const RECENCY_WEIGHT = 2.0; // Weight for recent events vs older events
+const TIME_PATTERN_WEIGHT = 1.5; // Weight for time-based patterns
+const MEMORY_LEAK_WEIGHT = 1.8; // Weight for memory leak probability
+const FAILURE_HISTORY_WEIGHT = 1.2; // Weight for historical failure patterns
 
 /**
  * Interface for restart recommendation
@@ -60,6 +68,139 @@ interface TimeBasedPattern {
   dayOfWeek: number; // day of week (0-6, 0 is Sunday)
   failureRate: number; // failure rate at this time
   confidence: number; // confidence in this pattern (0-100)
+}
+
+/**
+ * Interface for failure prediction time slot
+ */
+interface FailurePredictionTimeSlot {
+  startTime: Date; // Start time of this prediction slot
+  endTime: Date; // End time of this prediction slot
+  failureProbability: number; // Probability of failure (0-1)
+  confidenceScore: number; // Confidence in this prediction (0-100)
+  predictedMetrics?: { // Optional predicted metrics
+    responseTime?: number; // Predicted response time in ms
+    errorRate?: number; // Predicted error rate percentage 
+    availabilityPercent?: number; // Predicted availability percentage
+    resourceUtilization?: number; // Predicted resource utilization percentage
+  };
+  contributingFactors: string[]; // Factors contributing to this prediction
+}
+
+/**
+ * Interface for application prediction model
+ */
+interface AppPredictionModel {
+  appId: number;
+  appName: string;
+  predictionGenerated: Date; // When this prediction was generated
+  predictionTimeSlots: FailurePredictionTimeSlot[]; // Prediction time slots
+  aggregatedFailureProbability: number; // Overall probability of failure in prediction window (0-1)
+  recommendedActions: string[]; // Recommended actions to prevent predicted failures
+  highRiskPeriods: { // Identified high risk time periods
+    startTime: Date;
+    endTime: Date;
+    risk: 'low' | 'medium' | 'high' | 'critical';
+    description: string;
+  }[];
+}
+
+/**
+ * Generate failure predictions for a specific app
+ */
+export async function generateAppPredictions(appId: number): Promise<AppPredictionModel | null> {
+  try {
+    const app = await storage.getApp(appId);
+    if (!app) return null;
+    
+    const logs = await storage.getLogs(appId);
+    if (!logs || logs.length === 0) return null;
+    
+    // Get app health metrics
+    const healthMetrics = await calculateAppHealthMetrics(app, logs);
+    
+    // Create prediction time slots
+    const predictionTimeSlots: FailurePredictionTimeSlot[] = [];
+    const now = new Date();
+    
+    // Create slots for the next PREDICTION_WINDOW_HOURS hours, 1 hour per slot
+    for (let hour = 1; hour <= PREDICTION_WINDOW_HOURS; hour++) {
+      const slotStartTime = new Date(now.getTime());
+      slotStartTime.setHours(now.getHours() + hour - 1);
+      
+      const slotEndTime = new Date(now.getTime());
+      slotEndTime.setHours(now.getHours() + hour);
+      
+      const { 
+        failureProbability, 
+        confidenceScore, 
+        predictedMetrics, 
+        contributingFactors 
+      } = predictFailureForTimeSlot(app, healthMetrics, slotStartTime, logs);
+      
+      predictionTimeSlots.push({
+        startTime: slotStartTime,
+        endTime: slotEndTime,
+        failureProbability,
+        confidenceScore,
+        predictedMetrics,
+        contributingFactors
+      });
+    }
+    
+    // Calculate aggregated failure probability across all time slots
+    const aggregatedFailureProbability = predictionTimeSlots.reduce(
+      (sum, slot) => sum + (slot.failureProbability * (slot.confidenceScore / 100)), 
+      0
+    ) / predictionTimeSlots.length;
+    
+    // Identify high-risk periods
+    const highRiskPeriods = identifyHighRiskPeriods(predictionTimeSlots);
+    
+    // Generate recommended actions
+    const recommendedActions = generateRecommendedActions(
+      app, 
+      healthMetrics, 
+      predictionTimeSlots, 
+      aggregatedFailureProbability
+    );
+    
+    return {
+      appId: app.id,
+      appName: app.name,
+      predictionGenerated: new Date(),
+      predictionTimeSlots,
+      aggregatedFailureProbability,
+      recommendedActions,
+      highRiskPeriods
+    };
+  } catch (error) {
+    console.error(`Error generating predictions for app ${appId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Generate failure predictions for all apps
+ */
+export async function generateAllAppPredictions(): Promise<AppPredictionModel[]> {
+  try {
+    const apps = await storage.getApps();
+    const predictions: AppPredictionModel[] = [];
+    
+    for (const app of apps) {
+      const prediction = await generateAppPredictions(app.id);
+      if (prediction) {
+        predictions.push(prediction);
+      }
+    }
+    
+    // Sort by aggregated failure probability (highest first)
+    return predictions.sort((a, b) => b.aggregatedFailureProbability - a.aggregatedFailureProbability);
+  } catch (error) {
+    console.error("Error generating predictions:", error);
+    return [];
+  }
 }
 
 /**
@@ -481,7 +622,7 @@ async function calculateAppHealthMetrics(app: ReplitApp, logs: LogEntry[]): Prom
 }
 
 /**
- * Helper function to calculate correlation between uptime length and error occurrence
+ * Calculate correlation between uptime length and error occurrence
  * Returns a correlation coefficient between -1 and 1
  */
 function calculateUptimeErrorCorrelation(uptimePeriods: number[], errorLogs: LogEntry[]): number {
@@ -548,6 +689,315 @@ function calculateUptimeErrorCorrelation(uptimePeriods: number[], errorLogs: Log
   
   // No clear pattern
   return 0;
+}
+
+/**
+ * Predict failure probability for a specific time slot
+ */
+function predictFailureForTimeSlot(
+  app: ReplitApp, 
+  healthMetrics: AppHealthMetrics, 
+  timeSlot: Date, 
+  logs: LogEntry[]
+): {
+  failureProbability: number;
+  confidenceScore: number;
+  predictedMetrics?: {
+    responseTime?: number;
+    errorRate?: number;
+    availabilityPercent?: number;
+    resourceUtilization?: number;
+  };
+  contributingFactors: string[];
+} {
+  // Start with baseline probability based on current app status
+  let failureProbability = 0;
+  const confidenceFactors: number[] = [];
+  const contributingFactors: string[] = [];
+  
+  // 1. Base probability on app status
+  if (app.status === AppStatus.ERROR) {
+    failureProbability += 0.8;
+    confidenceFactors.push(90);
+    contributingFactors.push("Current error state");
+  } else if (app.status === AppStatus.UNREACHABLE) {
+    failureProbability += 0.9;
+    confidenceFactors.push(95);
+    contributingFactors.push("Currently unreachable");
+  } else if (app.status === AppStatus.STOPPED) {
+    failureProbability += 0.1;
+    confidenceFactors.push(80);
+    contributingFactors.push("Currently stopped");
+  }
+  
+  // 2. Add probability based on failure rate
+  if (healthMetrics.failureRate > HIGH_FAILURE_RATE) {
+    failureProbability += 0.3 * FAILURE_HISTORY_WEIGHT;
+    confidenceFactors.push(85);
+    contributingFactors.push("High historical failure rate");
+  } else if (healthMetrics.failureRate > MEDIUM_FAILURE_RATE) {
+    failureProbability += 0.15 * FAILURE_HISTORY_WEIGHT;
+    confidenceFactors.push(75);
+    contributingFactors.push("Moderate historical failure rate");
+  }
+  
+  // 3. Check for memory leak patterns
+  if (healthMetrics.memoryLeakLikelihood > 70) {
+    const predictedUptimeAtTimeSlot = healthMetrics.averageUptime + 
+      ((timeSlot.getTime() - new Date().getTime()) / (1000 * 60));
+    
+    // Higher memory leak probability with longer uptime
+    const memoryLeakFactor = Math.min(0.8, (healthMetrics.memoryLeakLikelihood / 100) * MEMORY_LEAK_WEIGHT);
+    
+    // Adjust based on projected uptime
+    const uptimeHours = predictedUptimeAtTimeSlot / 60;
+    if (uptimeHours > MEMORY_LEAK_THRESHOLD_HOURS * 1.5) {
+      failureProbability += memoryLeakFactor;
+      confidenceFactors.push(80);
+      contributingFactors.push("Predicted memory leak");
+    } else if (uptimeHours > MEMORY_LEAK_THRESHOLD_HOURS) {
+      failureProbability += memoryLeakFactor * 0.7;
+      confidenceFactors.push(70);
+      contributingFactors.push("Potential memory leak");
+    }
+  }
+  
+  // 4. Check for time-based failure patterns
+  const timeSlotHour = timeSlot.getHours();
+  const timeSlotDay = timeSlot.getDay();
+  
+  const matchingTimePattern = healthMetrics.timeBasedPatterns.find(pattern => 
+    pattern.timeOfDay === timeSlotHour && pattern.dayOfWeek === timeSlotDay
+  );
+  
+  if (matchingTimePattern) {
+    // Time pattern matching this time slot
+    const patternFactor = (matchingTimePattern.failureRate / 100) * 
+      (matchingTimePattern.confidence / 100) * TIME_PATTERN_WEIGHT;
+    
+    failureProbability += patternFactor;
+    confidenceFactors.push(matchingTimePattern.confidence);
+    contributingFactors.push("Time-based failure pattern match");
+  }
+  
+  // 5. Error frequency trend
+  if (healthMetrics.errorFrequencyTrend === 'increasing') {
+    failureProbability += 0.2 * RECENCY_WEIGHT;
+    confidenceFactors.push(75);
+    contributingFactors.push("Increasing error frequency");
+  }
+  
+  // 6. Performance degradation
+  if (healthMetrics.performanceDegradation > 50) {
+    failureProbability += 0.3;
+    confidenceFactors.push(80);
+    contributingFactors.push("Significant performance degradation");
+  } else if (healthMetrics.performanceDegradation > 25) {
+    failureProbability += 0.15;
+    confidenceFactors.push(70);
+    contributingFactors.push("Moderate performance degradation");
+  }
+  
+  // 7. Error density
+  if (healthMetrics.errorDensity > 2) {
+    failureProbability += 0.25;
+    confidenceFactors.push(80);
+    contributingFactors.push("High error density");
+  } else if (healthMetrics.errorDensity > 1) {
+    failureProbability += 0.15;
+    confidenceFactors.push(75);
+    contributingFactors.push("Moderate error density");
+  }
+  
+  // 8. Days since last restart 
+  if (healthMetrics.daysSinceLastRestart > PERIODIC_RESTART_INTERVAL_DAYS * 2) {
+    failureProbability += 0.2;
+    confidenceFactors.push(70);
+    contributingFactors.push("Extended period without restart");
+  } else if (healthMetrics.daysSinceLastRestart > PERIODIC_RESTART_INTERVAL_DAYS) {
+    failureProbability += 0.1;
+    confidenceFactors.push(60);
+    contributingFactors.push("Due for routine restart");
+  }
+  
+  // Cap probability at 1.0
+  failureProbability = Math.min(1.0, failureProbability);
+  
+  // Calculate average confidence score
+  const confidenceScore = confidenceFactors.length > 0 
+    ? confidenceFactors.reduce((sum, score) => sum + score, 0) / confidenceFactors.length 
+    : 50; // Default confidence if no factors
+  
+  // Generate predicted metrics based on failure probability
+  let predictedMetrics;
+  
+  if (failureProbability > 0.3) {
+    const availabilityImpact = 1 - failureProbability;
+    const responseTimeMultiplier = 1 + (failureProbability * 2); // Up to 3x slower
+    const errorRateMultiplier = failureProbability * 100; // Up to 100% errors
+    
+    predictedMetrics = {
+      responseTime: app.averageResponseTime ? Math.round(app.averageResponseTime * responseTimeMultiplier) : undefined,
+      errorRate: Math.round(errorRateMultiplier),
+      availabilityPercent: Math.round(availabilityImpact * 100),
+      resourceUtilization: app.resourceUsage ? Math.min(100, Math.round(app.resourceUsage * (1 + failureProbability))) : undefined
+    };
+  }
+  
+  return {
+    failureProbability,
+    confidenceScore,
+    predictedMetrics,
+    contributingFactors
+  };
+}
+
+/**
+ * Identify high-risk time periods from prediction time slots
+ */
+function identifyHighRiskPeriods(predictionTimeSlots: FailurePredictionTimeSlot[]): {
+  startTime: Date;
+  endTime: Date;
+  risk: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+}[] {
+  const highRiskPeriods: {
+    startTime: Date;
+    endTime: Date;
+    risk: 'low' | 'medium' | 'high' | 'critical';
+    description: string;
+  }[] = [];
+  
+  // Sort slots by probability
+  const sortedSlots = [...predictionTimeSlots].sort((a, b) => 
+    b.failureProbability - a.failureProbability
+  );
+  
+  // Get the top risk periods
+  for (const slot of sortedSlots) {
+    // Only include slots with significant probability
+    if (slot.failureProbability >= FAILURE_PROBABILITY_THRESHOLD) {
+      // Determine risk level
+      let risk: 'low' | 'medium' | 'high' | 'critical' = 'low';
+      
+      if (slot.failureProbability >= 0.9) {
+        risk = 'critical';
+      } else if (slot.failureProbability >= 0.7) {
+        risk = 'high';
+      } else if (slot.failureProbability >= 0.5) {
+        risk = 'medium';
+      }
+      
+      // Create description
+      const formattedStart = formatTime(slot.startTime);
+      const formattedEnd = formatTime(slot.endTime);
+      const probability = Math.round(slot.failureProbability * 100);
+      
+      let description = `${probability}% failure probability between ${formattedStart} and ${formattedEnd}`;
+      
+      if (slot.contributingFactors.length > 0) {
+        description += ` due to ${slot.contributingFactors[0]}`;
+        
+        if (slot.contributingFactors.length > 1) {
+          description += ` and ${slot.contributingFactors.length - 1} other factor(s)`;
+        }
+      }
+      
+      highRiskPeriods.push({
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        risk,
+        description
+      });
+    }
+  }
+  
+  // Return periods sorted by start time
+  return highRiskPeriods.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+}
+
+/**
+ * Generate recommended actions to mitigate predicted failures
+ */
+function generateRecommendedActions(
+  app: ReplitApp,
+  healthMetrics: AppHealthMetrics,
+  predictionTimeSlots: FailurePredictionTimeSlot[],
+  aggregatedFailureProbability: number
+): string[] {
+  const actions: string[] = [];
+  
+  // 1. Check if restart is most critical action
+  if (aggregatedFailureProbability > 0.7 || app.status === AppStatus.ERROR || app.status === AppStatus.UNREACHABLE) {
+    actions.push("Immediately restart the application to prevent imminent failure");
+  } else if (aggregatedFailureProbability > 0.5) {
+    actions.push("Schedule an application restart within the next few hours");
+  } else if (healthMetrics.daysSinceLastRestart > PERIODIC_RESTART_INTERVAL_DAYS) {
+    actions.push(`Schedule a preventative restart (${Math.round(healthMetrics.daysSinceLastRestart)} days since last restart)`);
+  }
+  
+  // 2. Check for memory leak
+  if (healthMetrics.memoryLeakLikelihood > 60) {
+    actions.push("Investigate potential memory leak in application code");
+    
+    if (app.type === 'Backend') {
+      actions.push("Consider implementing memory usage monitoring and automatic restart policies");
+    }
+  }
+  
+  // 3. Check for time-based patterns
+  if (healthMetrics.timeBasedPatterns.length > 0) {
+    const topPattern = healthMetrics.timeBasedPatterns[0];
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
+    actions.push(`Monitor application closely during ${dayNames[topPattern.dayOfWeek]} at ${topPattern.timeOfDay}:00 (${Math.round(topPattern.failureRate)}% historical failure rate)`);
+    
+    if (topPattern.failureRate > HIGH_FAILURE_RATE) {
+      actions.push("Consider scheduling preventative restarts before identified high-risk periods");
+    }
+  }
+  
+  // 4. General recommendations based on app type
+  if (app.type === 'Frontend') {
+    if (healthMetrics.performanceDegradation > 30) {
+      actions.push("Check frontend application for memory leaks in components or event listeners");
+    }
+  } else if (app.type === 'Backend') {
+    if (healthMetrics.errorFrequencyTrend === 'increasing') {
+      actions.push("Check backend logs for increasing error rates and implement error handling improvements");
+    }
+    
+    if (healthMetrics.performanceDegradation > 30) {
+      actions.push("Monitor backend resource usage and optimize database queries");
+    }
+  } else if (app.type === 'Database') {
+    if (healthMetrics.performanceDegradation > 20) {
+      actions.push("Analyze database performance and consider query optimization");
+    }
+    
+    if (healthMetrics.errorOccurrences > 3) {
+      actions.push("Check database connection pool settings and error handling");
+    }
+  }
+  
+  // 5. Add scaling recommendation if consistently high utilization
+  if (app.resourceUsage && app.resourceUsage > 80) {
+    actions.push("Consider scaling resources to handle current load");
+  }
+  
+  // Ensure we have at least one recommendation
+  if (actions.length === 0) {
+    actions.push("Continue monitoring application performance");
+  }
+  
+  return actions;
+}
+
+/**
+ * Helper function to format time for display
+ */
+function formatTime(date: Date): string {
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 /**
