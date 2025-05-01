@@ -86,16 +86,33 @@ export interface RestartRecommendation {
   predictedIssues?: string[]; // What might happen if not restarted
   recommendedTimeWindow?: string; // When should this restart happen
   memoryLeakLikelihood?: number; // Probability of memory leak (0-100)
+  
+  // Advanced insights and analysis
+  insights?: string[]; // Additional insights from advanced analysis
+  confidenceScore?: number; // Confidence in the recommendation (0-100)
+  alternativeSolutions?: string[]; // Alternative solutions
 }
 
 export async function getRestartRecommendations() {
   const res = await apiRequest("GET", "/api/recommendations");
-  return res.json();
+  const data = await res.json();
+  
+  // Convert string dates to Date objects
+  return data.map((recommendation: any) => ({
+    ...recommendation,
+    lastRestarted: recommendation.lastRestarted ? new Date(recommendation.lastRestarted) : null
+  }));
 }
 
 export async function getAppRestartRecommendation(id: number) {
   const res = await apiRequest("GET", `/api/apps/${id}/recommendation`);
-  return res.json();
+  const recommendation = await res.json();
+  
+  // Convert string dates to Date objects
+  return {
+    ...recommendation,
+    lastRestarted: recommendation.lastRestarted ? new Date(recommendation.lastRestarted) : null
+  };
 }
 
 // Prediction API functions

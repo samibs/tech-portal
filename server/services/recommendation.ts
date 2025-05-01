@@ -1,6 +1,5 @@
 import { ReplitApp, AppStatus, LogEntry } from "@shared/schema";
 import { storage } from "../storage";
-import { analyzeAppWithAI, analyzeSystemWithAI } from "./ai-analysis";
 
 // Constants for recommendation logic
 const MEMORY_LEAK_THRESHOLD_HOURS = 24; // After how many hours of uptime we suspect memory leaks
@@ -38,10 +37,10 @@ export interface RestartRecommendation {
   recommendedTimeWindow?: string; // When should this restart happen
   memoryLeakLikelihood?: number; // Probability of memory leak (0-100)
   
-  // AI-powered insights and analysis
-  aiInsights?: string[]; // Additional insights from AI analysis
-  confidenceScore?: number; // AI's confidence in the recommendation (0-100)
-  alternativeSolutions?: string[]; // Alternative solutions suggested by AI
+  // For future feature
+  insights?: string[]; // Additional insights from advanced analysis
+  confidenceScore?: number; // Confidence in the recommendation (0-100)
+  alternativeSolutions?: string[]; // Alternative solutions
 }
 
 /**
@@ -354,53 +353,65 @@ async function analyzeApp(app: ReplitApp): Promise<RestartRecommendation | null>
       memoryLeakLikelihood: Math.round(healthMetrics.memoryLeakLikelihood)
     };
     
-    // Add AI-powered analysis if available
+    // Add example insights based on our analysis
     try {
-      // Only perform AI analysis if the recommendation score is high enough to warrant it
-      if (recommendationScore >= 50 && process.env.ANTHROPIC_API_KEY) {
-        console.log(`Performing AI analysis for app ${app.id} with score ${recommendationScore}`);
+      // Only add additional insights if the recommendation score is high enough
+      if (recommendationScore >= 50) {
+        // Generate insights based on health metrics and app status
+        const insights: string[] = [];
         
-        const aiAnalysis = await analyzeAppWithAI(app, logs, healthMetrics, recommendation);
-        
-        if (aiAnalysis.aiInsights && aiAnalysis.aiInsights.length > 0) {
-          recommendation.aiInsights = aiAnalysis.aiInsights;
+        if (app.status === AppStatus.ERROR || app.status === AppStatus.UNREACHABLE) {
+          insights.push(`App ${app.name} is currently in a failed state and requires immediate attention.`);
         }
         
-        // Enhance the recommendation with AI suggestions if provided
-        if (aiAnalysis.enhancedRecommendation) {
-          const enhancements = aiAnalysis.enhancedRecommendation;
-          
-          // Only override values if the AI has high confidence
-          if (enhancements.urgency) {
-            recommendation.urgency = enhancements.urgency as 'low' | 'medium' | 'high' | 'critical';
-          }
-          
-          if (enhancements.predictedIssues && enhancements.predictedIssues.length > 0) {
-            recommendation.predictedIssues = enhancements.predictedIssues;
-          }
-          
-          if (enhancements.recommendedTimeWindow) {
-            recommendation.recommendedTimeWindow = enhancements.recommendedTimeWindow;
-          }
-          
-          if (enhancements.recommendationScore) {
-            // Blend the original score with the AI-suggested score (70% original, 30% AI)
-            recommendation.recommendationScore = Math.round(
-              recommendation.recommendationScore * 0.7 + enhancements.recommendationScore * 0.3
-            );
-            
-            // Set the confidence score from the AI
-            recommendation.confidenceScore = 80; // Default confidence value
-          }
-          
-          if (enhancements.alternativeSolutions) {
-            recommendation.alternativeSolutions = enhancements.alternativeSolutions;
-          }
+        if (healthMetrics.memoryLeakLikelihood > 60) {
+          insights.push(`Memory usage pattern indicates potential resource exhaustion over time.`);
         }
+        
+        if (healthMetrics.errorFrequencyTrend === 'increasing') {
+          insights.push(`Errors are becoming more frequent, suggesting a worsening condition.`);
+        }
+        
+        if (healthMetrics.timeBasedPatterns.length > 0) {
+          const pattern = healthMetrics.timeBasedPatterns[0];
+          insights.push(`Failures occur more frequently at hour ${pattern.timeOfDay} with ${pattern.confidence}% confidence.`);
+        }
+        
+        if (insights.length > 0) {
+          recommendation.insights = insights;
+        }
+        
+        // Generate alternative solutions if appropriate
+        const alternativeSolutions: string[] = [];
+        
+        if (app.status === AppStatus.ERROR || app.status === AppStatus.UNREACHABLE) {
+          alternativeSolutions.push("Check application logs for specific error messages");
+          alternativeSolutions.push("Verify network connectivity and firewall rules");
+        }
+        
+        if (healthMetrics.memoryLeakLikelihood > 50) {
+          alternativeSolutions.push("Monitor memory usage patterns to identify resource-intensive components");
+          alternativeSolutions.push("Implement resource cleanup routines in the application code");
+        }
+        
+        if (healthMetrics.performanceDegradation > 30) {
+          alternativeSolutions.push("Optimize database queries or implement query caching");
+          alternativeSolutions.push("Add load balancing if traffic patterns show high demand periods");
+        }
+        
+        if (alternativeSolutions.length > 0) {
+          recommendation.alternativeSolutions = alternativeSolutions;
+        }
+        
+        // Set the confidence score based on our analysis certainty
+        recommendation.confidenceScore = Math.min(
+          95, // Max confidence
+          Math.round(40 + (recommendationScore / 2)) // Base confidence plus score-based adjustment
+        );
       }
-    } catch (aiError) {
-      console.error(`Error during AI analysis for app ${app.id}:`, aiError);
-      // Continue with the regular recommendation even if AI analysis fails
+    } catch (error) {
+      console.error(`Error during enhanced analysis for app ${app.id}:`, error);
+      // Continue with the regular recommendation even if enhanced analysis fails
     }
     
     return recommendation;

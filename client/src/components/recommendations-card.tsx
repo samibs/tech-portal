@@ -290,12 +290,12 @@ export default function RecommendationsCard({ onAppRestarted }: RecommendationsC
                   </div>
                 )}
                 
-                {recommendation.aiInsights && recommendation.aiInsights.length > 0 && (
+                {recommendation.insights && recommendation.insights.length > 0 && (
                   <div className="flex items-start text-xs mt-3 pt-3 border-t border-dashed border-gray-200 dark:border-gray-700">
                     <BrainCircuit className="h-4 w-4 mr-2 text-purple-500 shrink-0 mt-0.5" />
                     <div>
                       <p className="font-medium flex items-center">
-                        AI Analysis
+                        Advanced Analysis
                         {recommendation.confidenceScore && (
                           <span className="ml-2 text-xs px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900 rounded text-purple-800 dark:text-purple-300">
                             {recommendation.confidenceScore}% confidence
@@ -303,7 +303,7 @@ export default function RecommendationsCard({ onAppRestarted }: RecommendationsC
                         )}
                       </p>
                       <ul className="mt-1.5 space-y-2">
-                        {recommendation.aiInsights.map((insight, idx) => (
+                        {recommendation.insights.map((insight, idx) => (
                           <li key={idx} className="flex items-start text-gray-600 dark:text-gray-300">
                             <Lightbulb className="h-3.5 w-3.5 mr-2 text-amber-500 shrink-0 mt-0.5" />
                             <span>{insight}</span>
