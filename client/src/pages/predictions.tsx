@@ -8,9 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FailurePredictionCard from "@/components/failure-prediction-card";
-import { getAllPredictions, AppPredictionModel } from "@/lib/api";
-import { ArrowRightIcon, AlertCircleIcon, TrendingUpIcon, ClockIcon, AlertTriangleIcon, RefreshCwIcon } from "lucide-react";
-import { Link } from "wouter";
+import { getAllPredictions, getAppPrediction, AppPredictionModel } from "@/lib/api";
+import { ArrowRightIcon, AlertCircleIcon, TrendingUpIcon, ClockIcon, AlertTriangleIcon, RefreshCwIcon, ArrowLeftIcon } from "lucide-react";
+import { Link, useLocation } from "wouter";
 
 export default function PredictionsPage() {
   const { appId } = useParams();
@@ -97,10 +97,23 @@ export default function PredictionsPage() {
     );
   }
   
+  const [, setLocation] = useLocation();
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Application Predictions</h1>
+        <div className="flex items-center">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="mr-4" 
+            onClick={() => setLocation('/')}
+          >
+            <ArrowLeftIcon className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+          <h1 className="text-3xl font-bold tracking-tight">Application Predictions</h1>
+        </div>
         <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
           <RefreshCwIcon className="mr-2 h-4 w-4" />
           Refresh Predictions

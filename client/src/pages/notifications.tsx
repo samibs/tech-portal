@@ -7,13 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NotificationDemo from "@/components/notification-demo";
-import { Bell, Settings, Clock, AlertTriangle } from "lucide-react";
+import { Bell, Settings, Clock, AlertTriangle, ArrowLeftIcon } from "lucide-react";
 import Sidebar from "@/components/layout/sidebar";
 import MobileHeader from "@/components/layout/mobile-header";
+import { useLocation } from "wouter";
 
 export default function NotificationsPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { notifications, clearNotifications } = useNotifications();
+  const [, setLocation] = useLocation();
   const [settings, setSettings] = useState({
     statusNotifications: true,
     predictionNotifications: true,
@@ -52,7 +54,18 @@ export default function NotificationsPage() {
         {/* Notifications content */}
         <div className="flex-1 overflow-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>
+            <div className="flex items-center">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="mr-4" 
+                onClick={() => setLocation('/')}
+              >
+                <ArrowLeftIcon className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+              <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>
+            </div>
             <Button 
               variant="outline" 
               onClick={clearNotifications}

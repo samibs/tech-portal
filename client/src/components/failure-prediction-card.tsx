@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getAppPrediction, AppPredictionModel } from "@/lib/api";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useState } from "react";
+import { useLocation } from "wouter";
 
 interface FailurePredictionCardProps {
   appId: number;
