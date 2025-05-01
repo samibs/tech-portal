@@ -156,10 +156,13 @@ export default function PredictionsPage() {
                   </div>
                 )}
                 
-                <Button size="sm" asChild>
-                  <Link to={`/predictions/${highestRiskApp.appId}`}>
-                    View Prediction Details <ArrowRightIcon className="ml-2 h-4 w-4" />
-                  </Link>
+                <Button 
+                  size="sm"
+                  onClick={() => {
+                    window.location.href = `/predictions/${highestRiskApp.appId}`;
+                  }}
+                >
+                  View Prediction Details <ArrowRightIcon className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </CardContent>
@@ -188,10 +191,13 @@ export default function PredictionsPage() {
                 
                 <p className="text-sm">{mostImminentRisk.description}</p>
                 
-                <Button size="sm" asChild>
-                  <Link to={`/predictions/${mostImminentRisk.appId}`}>
-                    View Full Prediction <ArrowRightIcon className="ml-2 h-4 w-4" />
-                  </Link>
+                <Button 
+                  size="sm"
+                  onClick={() => {
+                    window.location.href = `/predictions/${mostImminentRisk.appId}`;
+                  }}
+                >
+                  View Full Prediction <ArrowRightIcon className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </CardContent>
@@ -328,11 +334,11 @@ function PredictionSummaryCard({ prediction }: PredictionSummaryCardProps) {
             size="sm" 
             variant="secondary" 
             className="w-full mt-2"
-            asChild
+            onClick={() => {
+              window.location.href = `/predictions/${prediction.appId}`;
+            }}
           >
-            <Link to={`/predictions/${prediction.appId}`}>
-              View Details
-            </Link>
+            View Details
           </Button>
         </div>
       </CardContent>

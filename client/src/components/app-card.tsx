@@ -201,10 +201,7 @@ export default function AppCard({ app, onStatusChange }: AppCardProps) {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    toast({
-                      title: "View Logs",
-                      description: "Detailed logs view will be implemented soon.",
-                    });
+                    window.location.href = `/logs/${app.id}`;
                   }}
                   disabled={isLoading}
                   className="w-full transition-all hover:shadow-md"
