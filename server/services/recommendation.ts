@@ -37,6 +37,11 @@ export interface RestartRecommendation {
   recommendedTimeWindow?: string; // When should this restart happen
   memoryLeakLikelihood?: number; // Probability of memory leak (0-100)
   
+  // Ghost process related information
+  ghostProcessDetections?: number; // Number of ghost process detections
+  ghostProcessTerminations?: number; // Number of ghost process terminations
+  hasGhostProcesses?: boolean; // Whether ghost processes have been detected
+  
   // For future feature
   insights?: string[]; // Additional insights from advanced analysis
   confidenceScore?: number; // Confidence in the recommendation (0-100)
@@ -63,6 +68,11 @@ interface AppHealthMetrics {
   performanceDegradation: number; // estimated % of performance degradation based on patterns
   memoryLeakLikelihood: number; // likelihood of memory leak (0-100)
   daysSinceLastRestart: number; // days since last restart
+  
+  // Ghost process metrics
+  ghostProcessDetections?: number; // count of ghost process detections
+  ghostProcessTerminations?: number; // count of ghost process terminations
+  hasGhostProcesses?: boolean; // whether ghost processes have been detected
 }
 
 /**
@@ -350,7 +360,12 @@ async function analyzeApp(app: ReplitApp): Promise<RestartRecommendation | null>
       urgency,
       predictedIssues,
       recommendedTimeWindow,
-      memoryLeakLikelihood: Math.round(healthMetrics.memoryLeakLikelihood)
+      memoryLeakLikelihood: Math.round(healthMetrics.memoryLeakLikelihood),
+      
+      // Ghost process information
+      ghostProcessDetections: healthMetrics.ghostProcessDetections,
+      ghostProcessTerminations: healthMetrics.ghostProcessTerminations,
+      hasGhostProcesses: healthMetrics.hasGhostProcesses
     };
     
     // Add example insights based on our analysis
@@ -445,6 +460,12 @@ async function calculateAppHealthMetrics(app: ReplitApp, logs: LogEntry[]): Prom
     log.action.includes("Failed") || 
     log.status === AppStatus.ERROR || 
     log.status === AppStatus.UNREACHABLE
+  );
+  
+  // Ghost process related logs
+  const ghostProcessLogs = recentLogs.filter(log => 
+    log.action.includes("Ghost Process") || 
+    log.action.includes("Process Terminated")
   );
   
   // ===== Basic Metrics =====
@@ -668,6 +689,18 @@ async function calculateAppHealthMetrics(app: ReplitApp, logs: LogEntry[]): Prom
   // Cap at 100
   memoryLeakLikelihood = Math.min(100, memoryLeakLikelihood);
   
+  // Calculate ghost process metrics
+  const ghostProcessDetections = ghostProcessLogs.filter(log => 
+    log.action.includes("Ghost Process Cleanup Attempt") || 
+    log.action.includes("Ghost Process Detected")
+  ).length;
+  
+  const ghostProcessTerminations = ghostProcessLogs.filter(log => 
+    log.action.includes("Process Terminated")
+  ).length;
+  
+  const hasGhostProcesses = ghostProcessDetections > 0;
+  
   // Return the complete health metrics
   return {
     // Basic metrics
@@ -685,7 +718,12 @@ async function calculateAppHealthMetrics(app: ReplitApp, logs: LogEntry[]): Prom
     uptimeStability,
     performanceDegradation,
     memoryLeakLikelihood,
-    daysSinceLastRestart
+    daysSinceLastRestart,
+    
+    // Ghost process metrics
+    ghostProcessDetections,
+    ghostProcessTerminations,
+    hasGhostProcesses
   };
 }
 
