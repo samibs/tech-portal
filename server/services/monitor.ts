@@ -97,7 +97,7 @@ export async function updateCheckFrequency(seconds: number): Promise<void> {
 }
 
 // Import the controller functions
-import { restartApp } from "./controller";
+import { restartApp, terminateGhostProcesses } from "./controller";
 
 // Check all registered apps
 async function checkAllApps(): Promise<void> {
@@ -581,9 +581,26 @@ async function checkAllProcesses(): Promise<void> {
       
       await checkAppProcesses(app);
       
-      // Auto-cleanup if enabled
+      // Auto-cleanup if enabled and app has ghost processes
       if (settings.cleanupGhostProcesses) {
-        await storage.terminateGhostProcesses(app.id);
+        try {
+          // Get ghost processes count
+          const processes = await storage.getProcesses(app.id);
+          const ghostProcessCount = processes.filter(p => 
+            app.status !== AppStatus.RUNNING && 
+            p.status === "Running"
+          ).length;
+          
+          // Terminate ghost processes if any found
+          if (ghostProcessCount > 0) {
+            console.log(`Auto-cleanup: Found ${ghostProcessCount} ghost processes for app ${app.id} (${app.name})`);
+            const result = await terminateGhostProcesses(app);
+            
+            console.log(`Auto-cleanup result for app ${app.id} (${app.name}): ${result.success ? 'Success' : 'Failed'}, ${result.terminatedCount} processes terminated${result.error ? '. Error: ' + result.error : ''}`);
+          }
+        } catch (error) {
+          console.error(`Error during auto-cleanup of ghost processes for app ${app.id} (${app.name}):`, error);
+        }
       }
     }
   } catch (error) {
