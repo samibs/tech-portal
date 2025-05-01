@@ -3,70 +3,87 @@ import { InsertApp, UpdateSettings } from "@shared/schema";
 
 // App API
 export async function getApps() {
-  const res = await apiRequest("GET", "/api/apps");
+  const res = await apiRequest("/api/apps");
   return res.json();
 }
 
 export async function getApp(id: number) {
-  const res = await apiRequest("GET", `/api/apps/${id}`);
+  const res = await apiRequest(`/api/apps/${id}`);
   return res.json();
 }
 
 export async function createApp(app: InsertApp) {
-  const res = await apiRequest("POST", "/api/apps", app);
+  const res = await apiRequest("/api/apps", {
+    method: "POST",
+    data: app
+  });
   return res.json();
 }
 
 export async function updateApp(id: number, updates: Partial<any>) {
-  const res = await apiRequest("PATCH", `/api/apps/${id}`, updates);
+  const res = await apiRequest(`/api/apps/${id}`, {
+    method: "PATCH", 
+    data: updates
+  });
   return res.json();
 }
 
 export async function deleteApp(id: number) {
-  const res = await apiRequest("DELETE", `/api/apps/${id}`);
+  const res = await apiRequest(`/api/apps/${id}`, {
+    method: "DELETE"
+  });
   return res.json();
 }
 
 export async function startApp(id: number) {
-  const res = await apiRequest("POST", `/api/apps/${id}/start`);
+  const res = await apiRequest(`/api/apps/${id}/start`, {
+    method: "POST"
+  });
   return res.json();
 }
 
 export async function stopApp(id: number) {
-  const res = await apiRequest("POST", `/api/apps/${id}/stop`);
+  const res = await apiRequest(`/api/apps/${id}/stop`, {
+    method: "POST"
+  });
   return res.json();
 }
 
 export async function restartApp(id: number) {
-  const res = await apiRequest("POST", `/api/apps/${id}/restart`);
+  const res = await apiRequest(`/api/apps/${id}/restart`, {
+    method: "POST"
+  });
   return res.json();
 }
 
 export async function getAppLogs(id: number) {
-  const res = await apiRequest("GET", `/api/apps/${id}/logs`);
+  const res = await apiRequest(`/api/apps/${id}/logs`);
   return res.json();
 }
 
 // Settings API
 export async function getSettings() {
-  const res = await apiRequest("GET", "/api/settings");
+  const res = await apiRequest("/api/settings");
   return res.json();
 }
 
 export async function updateSettings(settings: Partial<UpdateSettings>) {
-  const res = await apiRequest("PATCH", "/api/settings", settings);
+  const res = await apiRequest("/api/settings", {
+    method: "PATCH", 
+    data: settings
+  });
   return res.json();
 }
 
 // Stats API
 export async function getStats() {
-  const res = await apiRequest("GET", "/api/stats");
+  const res = await apiRequest("/api/stats");
   return res.json();
 }
 
 // Logs API
 export async function getLogs() {
-  const res = await apiRequest("GET", "/api/logs");
+  const res = await apiRequest("/api/logs");
   return res.json();
 }
 
@@ -94,7 +111,7 @@ export interface RestartRecommendation {
 }
 
 export async function getRestartRecommendations() {
-  const res = await apiRequest("GET", "/api/recommendations");
+  const res = await apiRequest("/api/recommendations");
   const data = await res.json();
   
   // Convert string dates to Date objects
@@ -105,7 +122,7 @@ export async function getRestartRecommendations() {
 }
 
 export async function getAppRestartRecommendation(id: number) {
-  const res = await apiRequest("GET", `/api/apps/${id}/recommendation`);
+  const res = await apiRequest(`/api/apps/${id}/recommendation`);
   const recommendation = await res.json();
   
   // Convert string dates to Date objects
@@ -146,7 +163,7 @@ export interface AppPredictionModel {
 }
 
 export async function getAllPredictions() {
-  const res = await apiRequest("GET", "/api/predictions");
+  const res = await apiRequest("/api/predictions");
   const data = await res.json();
   
   // Convert string dates to Date objects
@@ -167,7 +184,7 @@ export async function getAllPredictions() {
 }
 
 export async function getAppPrediction(id: number) {
-  const res = await apiRequest("GET", `/api/apps/${id}/prediction`);
+  const res = await apiRequest(`/api/apps/${id}/prediction`);
   const prediction = await res.json();
   
   // Convert string dates to Date objects
