@@ -93,6 +93,23 @@ export async function startApp(app: ReplitApp): Promise<AppControlResult> {
       };
     }
     
+    // Check for port conflicts
+    const portConflict = await checkPortConflicts(app);
+    if (portConflict) {
+      // Log failure
+      await storage.createLog({
+        appId: app.id,
+        action: "Start Failed",
+        details: `Failed to start app: ${portConflict.error}`,
+        status: app.status
+      });
+      
+      return {
+        success: false,
+        error: portConflict.error
+      };
+    }
+    
     // Simulate trying to connect to the application
     const canConnect = await simulateConnectionCheck(app);
     if (!canConnect.success) {
