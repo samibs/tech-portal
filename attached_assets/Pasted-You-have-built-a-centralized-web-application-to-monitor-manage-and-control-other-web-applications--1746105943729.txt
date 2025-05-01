@@ -1,0 +1,44 @@
+You have built a centralized web application to monitor, manage, and control other web applications. The core and optional features are defined below.
+Checklist:
+✅ Core Features:
+ App registration UI with fields: App Name, Project URL, Start Command, Port Number, App Type
+ Persistent storage of registered apps (e.g., JSON or embedded DB)
+ Periodic status checks for each app (HTTP probe or port check based on type)
+ Configurable check frequency
+ Clear status display with indicators: Running, Stopped, Unreachable, Error
+ Start/Stop controls in the UI with error handling
+ Subprocess or API-based command execution (if applicable)
+✅ UI/UX:
+ Responsive layout (mobile/tablet/desktop)
+ Clear card/table layout for apps
+ Visual feedback (status color codes, icons, tooltips)
+ Toast notifications for app state changes or errors
+✅ Enhancements:
+ Logging of actions (start/stop/status changes/errors)
+ Display recent logs in UI
+ Optional auto-restart of stopped/unreachable apps with retry config
+ Health check endpoint support (/health)
+ Notifications for failures or restarts
+ Authentication and role-based access
+ Public API for external automation
+ Environment variable manager (optional)
+ Resource usage display (if data is available)
+ Deployment triggers or restart hooks (stretch goal)
+Instructions:
+Review all items above.
+If any feature is missing or incomplete, finish implementing it.
+If features are implemented, double-check for UI polish and consistency.
+On your own initiative, go beyond the spec where reasonable to improve UX, such as:
+Smooth animations on status changes
+Drag-and-drop app reordering
+Editable app details post-registration
+Dark mode toggle
+Minimal onboarding walkthrough for first-time users
+Smart grouping (e.g., group apps by type or status)
+Persistent UI state (e.g., last selected view, auto-scroll to active apps)
+Visual activity timeline/log
+System health summary panel at the top (e.g., total running apps, total errors)
+Lazy loading or pagination if many apps are registered
+Full accessibility support (keyboard nav, ARIA labels, etc.)
+Then confirm:
+✅ Are all core and enhancement features implemented and polished to production-grade UX/UI? If not, complete them now.
