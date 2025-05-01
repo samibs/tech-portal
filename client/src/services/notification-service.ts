@@ -11,7 +11,7 @@ export function generateStatusChangeNotification(
   app: ReplitApp,
   previousStatus: AppStatus,
   newStatus: AppStatus
-): NotificationData {
+): NotificationData | null {
   // Skip if status is the same
   if (previousStatus === newStatus) {
     return null;

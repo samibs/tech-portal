@@ -19,6 +19,7 @@ function Router() {
       <Route path="/applications" component={Applications} />
       <Route path="/predictions" component={Predictions} />
       <Route path="/predictions/:appId" component={Predictions} />
+      <Route path="/notifications" component={Notifications} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
@@ -29,10 +30,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class">
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <NotificationProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </NotificationProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

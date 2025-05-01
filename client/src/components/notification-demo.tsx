@@ -34,12 +34,13 @@ export default function NotificationDemo() {
     replitUrl: "https://demo.replit.app",
     port: 3000,
     type: "Frontend",
-    status: "Stopped",
+    status: AppStatus.STOPPED,
     startCommand: "npm start",
-    stopCommand: "kill -9 $(lsof -t -i:3000)",
     createdAt: new Date(),
     updatedAt: new Date(),
-    lastChecked: new Date()
+    lastChecked: new Date(),
+    lastLogs: null,
+    lastRestarted: null
   };
   
   // Demo prediction for prediction notifications
@@ -147,16 +148,16 @@ export default function NotificationDemo() {
               Generate notifications when an application changes status
             </p>
             <div className="grid grid-cols-2 gap-2">
-              <Button onClick={() => sendStatusNotification("Running")} size="sm" variant="default">
+              <Button onClick={() => sendStatusNotification(AppStatus.RUNNING)} size="sm" variant="default">
                 App Started
               </Button>
-              <Button onClick={() => sendStatusNotification("Stopped")} size="sm" variant="outline">
+              <Button onClick={() => sendStatusNotification(AppStatus.STOPPED)} size="sm" variant="outline">
                 App Stopped
               </Button>
-              <Button onClick={() => sendStatusNotification("Unreachable")} size="sm" variant="outline">
+              <Button onClick={() => sendStatusNotification(AppStatus.UNREACHABLE)} size="sm" variant="outline">
                 App Unreachable
               </Button>
-              <Button onClick={() => sendStatusNotification("Error")} size="sm" variant="destructive">
+              <Button onClick={() => sendStatusNotification(AppStatus.ERROR)} size="sm" variant="destructive">
                 App Error
               </Button>
             </div>
