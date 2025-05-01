@@ -11,6 +11,8 @@ import { ThemeProvider } from "next-themes";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import NotificationCenter from "@/components/notification-center";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 function Router() {
   return (
@@ -26,6 +28,15 @@ function Router() {
   );
 }
 
+function Header() {
+  return (
+    <div className="fixed top-0 right-0 z-50 p-4 flex items-center space-x-2">
+      <NotificationCenter />
+      <ThemeToggle />
+    </div>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -33,6 +44,7 @@ function App() {
         <NotificationProvider>
           <TooltipProvider>
             <Toaster />
+            <Header />
             <Router />
           </TooltipProvider>
         </NotificationProvider>

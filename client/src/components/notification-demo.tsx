@@ -37,10 +37,13 @@ export default function NotificationDemo() {
     status: AppStatus.STOPPED,
     startCommand: "npm start",
     createdAt: new Date(),
-    updatedAt: new Date(),
     lastChecked: new Date(),
     lastLogs: null,
-    lastRestarted: null
+    lastRestarted: null,
+    averageResponseTime: null,
+    errorRate: null,
+    resourceUsage: null,
+    uptime: null
   };
   
   // Demo prediction for prediction notifications
