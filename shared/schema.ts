@@ -1,21 +1,77 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer, blob } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// User schema (kept from original file for compatibility)
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+// Enhanced User schema with roles and security features
+export const users = sqliteTable("users", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  role: text("role").notNull().default("user"), // admin, user, viewer, emergency_admin
+  email: text("email"),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  lastLogin: integer("last_login", { mode: "timestamp" }),
+  failedLoginAttempts: integer("failed_login_attempts").notNull().default(0),
+  lockedUntil: integer("locked_until", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  role: true,
+  email: true,
 });
 
+export const updateUserSchema = createInsertSchema(users).pick({
+  username: true,
+  email: true,
+  role: true,
+  isActive: true,
+  password: true,
+  lastLogin: true,
+}).partial();
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpdateUser = z.infer<typeof updateUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// Audit log schema for security and compliance
+export const auditLogs = sqliteTable("audit_logs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id"),
+  username: text("username"),
+  role: text("role"),
+  action: text("action").notNull(),
+  details: text("details"),
+  ip: text("ip"),
+  userAgent: text("user_agent"),
+  timestamp: integer("timestamp", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+export const insertAuditLogSchema = createInsertSchema(auditLogs).pick({
+  userId: true,
+  username: true,
+  role: true,
+  action: true,
+  details: true,
+  ip: true,
+  userAgent: true,
+});
+
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type AuditLog = typeof auditLogs.$inferSelect;
+
+// Session schema for managing user sessions
+export const sessions = sqliteTable("sessions", {
+  id: text("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+export type Session = typeof sessions.$inferSelect;
 
 // App status enum
 export enum AppStatus {
@@ -33,37 +89,37 @@ export enum AppType {
   OTHER = "Other"
 }
 
-// App schema
-export const replitApps = pgTable("replit_apps", {
-  id: serial("id").primaryKey(),
+// App schema (renamed from replitApps to webApps)
+export const webApps = sqliteTable("web_apps", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
-  replitUrl: text("replit_url").notNull(),
+  appUrl: text("app_url").notNull(), // Changed from replitUrl to appUrl
   startCommand: text("start_command").notNull(),
   port: integer("port").notNull(),
   type: text("type").notNull(), // Will use AppType enum
-  lastChecked: timestamp("last_checked"),
+  lastChecked: integer("last_checked", { mode: "timestamp" }),
   status: text("status").notNull().default("Stopped"), // Will use AppStatus enum
   lastLogs: text("last_logs"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   
   // Performance metrics (added for prediction model)
   averageResponseTime: integer("average_response_time"), // in milliseconds
   resourceUsage: integer("resource_usage"), // percentage (0-100)
   uptime: integer("uptime"), // in minutes
   errorRate: integer("error_rate"), // percentage (0-100)
-  lastRestarted: timestamp("last_restarted"),
+  lastRestarted: integer("last_restarted", { mode: "timestamp" }),
   
   // Enhanced monitoring fields
-  checkForGhostProcesses: boolean("check_for_ghost_processes").default(true),
+  checkForGhostProcesses: integer("check_for_ghost_processes", { mode: "boolean" }).default(true),
   healthCheckPath: text("health_check_path").default("/health"),
-  additionalPorts: jsonb("additional_ports").$type<number[]>(),
+  additionalPorts: text("additional_ports"), // JSON string for array of numbers
 });
 
 // Zod schema for app insert
-export const insertAppSchema = createInsertSchema(replitApps)
+export const insertAppSchema = createInsertSchema(webApps)
   .pick({
     name: true,
-    replitUrl: true,
+    appUrl: true,
     startCommand: true,
     port: true,
     type: true,
@@ -81,14 +137,14 @@ export const insertAppSchema = createInsertSchema(replitApps)
   });
 
 export type InsertApp = z.infer<typeof insertAppSchema>;
-export type ReplitApp = typeof replitApps.$inferSelect;
+export type WebApp = typeof webApps.$inferSelect;
 
 // Settings schema
-export const settings = pgTable("settings", {
-  id: serial("id").primaryKey(),
+export const settings = sqliteTable("settings", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   // App checking settings
   checkFrequency: integer("check_frequency").notNull().default(30), // in seconds
-  autoRestart: boolean("auto_restart").notNull().default(false),
+  autoRestart: integer("auto_restart", { mode: "boolean" }).notNull().default(false),
   maxRetries: integer("max_retries").notNull().default(3),
   retryDelay: integer("retry_delay").notNull().default(5), // in seconds
 
@@ -96,13 +152,13 @@ export const settings = pgTable("settings", {
   endpointCheckFrequency: integer("endpoint_check_frequency").notNull().default(60), // in seconds
   portCheckFrequency: integer("port_check_frequency").notNull().default(120), // in seconds
   processCheckFrequency: integer("process_check_frequency").notNull().default(300), // in seconds
-  enableGhostProcessDetection: boolean("enable_ghost_process_detection").notNull().default(true),
-  cleanupGhostProcesses: boolean("cleanup_ghost_processes").notNull().default(false), // Whether to automatically kill ghost processes
-  sendToastNotifications: boolean("send_toast_notifications").notNull().default(true),
+  enableGhostProcessDetection: integer("enable_ghost_process_detection", { mode: "boolean" }).notNull().default(true),
+  cleanupGhostProcesses: integer("cleanup_ghost_processes", { mode: "boolean" }).notNull().default(false), // Whether to automatically kill ghost processes
+  sendToastNotifications: integer("send_toast_notifications", { mode: "boolean" }).notNull().default(true),
   endpointTimeout: integer("endpoint_timeout").notNull().default(5000), // in milliseconds
   
   // Email notification settings
-  enableEmails: boolean("enable_emails").notNull().default(false),
+  enableEmails: integer("enable_emails", { mode: "boolean" }).notNull().default(false),
   emailAddress: text("email_address"),
   smtpHost: text("smtp_host"),
   smtpPort: integer("smtp_port").default(587),
@@ -139,10 +195,10 @@ export type UpdateSettings = z.infer<typeof updateSettingsSchema>;
 export type Settings = typeof settings.$inferSelect;
 
 // Log entry schema
-export const logEntries = pgTable("log_entries", {
-  id: serial("id").primaryKey(),
+export const logEntries = sqliteTable("log_entries", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   appId: integer("app_id"),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  timestamp: integer("timestamp", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   action: text("action").notNull(),
   details: text("details"),
   status: text("status"),
@@ -168,8 +224,8 @@ export enum EndpointStatus {
 }
 
 // Endpoint schema
-export const endpoints = pgTable("endpoints", {
-  id: serial("id").primaryKey(),
+export const endpoints = sqliteTable("endpoints", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   appId: integer("app_id").notNull(),
   path: text("path").notNull(),
   method: text("method").notNull().default("GET"),
@@ -177,10 +233,10 @@ export const endpoints = pgTable("endpoints", {
   expectedStatusCode: integer("expected_status_code").notNull().default(200),
   timeout: integer("timeout").notNull().default(5000), // in milliseconds
   status: text("status").notNull().default(EndpointStatus.UNKNOWN),
-  lastChecked: timestamp("last_checked"),
+  lastChecked: integer("last_checked", { mode: "timestamp" }),
   responseTime: integer("response_time"), // in milliseconds
   errorMessage: text("error_message"),
-  lastSuccessful: timestamp("last_successful"),
+  lastSuccessful: integer("last_successful", { mode: "timestamp" }),
   checkFrequency: integer("check_frequency"), // in seconds, null means use global setting
 });
 
@@ -199,13 +255,13 @@ export type InsertEndpoint = z.infer<typeof insertEndpointSchema>;
 export type Endpoint = typeof endpoints.$inferSelect;
 
 // Port schema to track all ports used by an application
-export const appPorts = pgTable("app_ports", {
-  id: serial("id").primaryKey(),
+export const appPorts = sqliteTable("app_ports", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   appId: integer("app_id").notNull(),
   port: integer("port").notNull(),
   service: text("service"), // What service uses this port (e.g., "HTTP Server", "WebSocket", "Database")
   status: text("status").notNull().default("Unknown"), // "Available", "In use", "Blocked"
-  lastChecked: timestamp("last_checked"),
+  lastChecked: integer("last_checked", { mode: "timestamp" }),
 });
 
 export const insertAppPortSchema = createInsertSchema(appPorts)
@@ -219,16 +275,16 @@ export type InsertAppPort = z.infer<typeof insertAppPortSchema>;
 export type AppPort = typeof appPorts.$inferSelect;
 
 // Process schema to track running processes for applications
-export const appProcesses = pgTable("app_processes", {
-  id: serial("id").primaryKey(),
+export const appProcesses = sqliteTable("app_processes", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   appId: integer("app_id").notNull(),
   pid: integer("pid").notNull(),
   command: text("command").notNull(),
-  startedAt: timestamp("started_at").defaultNow().notNull(),
+  startedAt: integer("started_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   status: text("status").notNull().default("Running"), // "Running", "Terminated", "Zombie"
   cpuUsage: integer("cpu_usage"), // percentage
   memoryUsage: integer("memory_usage"), // in MB
-  lastChecked: timestamp("last_checked"),
+  lastChecked: integer("last_checked", { mode: "timestamp" }),
 });
 
 export const insertAppProcessSchema = createInsertSchema(appProcesses)
@@ -240,3 +296,7 @@ export const insertAppProcessSchema = createInsertSchema(appProcesses)
 
 export type InsertAppProcess = z.infer<typeof insertAppProcessSchema>;
 export type AppProcess = typeof appProcesses.$inferSelect;
+
+// Legacy exports for backward compatibility (will be removed in future versions)
+export const replitApps = webApps;
+export type ReplitApp = WebApp;

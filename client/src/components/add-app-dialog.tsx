@@ -48,7 +48,7 @@ export default function AddAppDialog({
     resolver: zodResolver(insertAppSchema),
     defaultValues: {
       name: "",
-      replitUrl: "",
+      appUrl: "",
       startCommand: "",
       port: 3000,
       type: AppType.FRONTEND,
@@ -75,7 +75,7 @@ export default function AddAppDialog({
         <DialogHeader>
           <DialogTitle>Register New Application</DialogTitle>
           <DialogDescription>
-            Enter the details of your Replit application to register it for monitoring.
+            Enter the details of your application to register it for monitoring and management.
           </DialogDescription>
         </DialogHeader>
         
@@ -86,9 +86,9 @@ export default function AddAppDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>App Name</FormLabel>
+                  <FormLabel>Application Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. User API" {...field} />
+                    <Input placeholder="e.g. User API, Frontend App, Database Service" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -97,12 +97,12 @@ export default function AddAppDialog({
             
             <FormField
               control={form.control}
-              name="replitUrl"
+              name="appUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Replit Project URL</FormLabel>
+                  <FormLabel>Application URL</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. replit.com/your-username/project-name" {...field} />
+                    <Input placeholder="e.g. https://myapp.example.com or localhost:3000" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -116,7 +116,7 @@ export default function AddAppDialog({
                 <FormItem>
                   <FormLabel>Start Command</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. npm start" {...field} className="font-mono" />
+                    <Input placeholder="e.g. npm start, python app.py, node server.js" {...field} className="font-mono" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -133,9 +133,9 @@ export default function AddAppDialog({
                     <FormControl>
                       <Input 
                         type="number" 
-                        placeholder="e.g. 3000" 
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                        placeholder="e.g. 3000, 8080, 5000" 
+                        value={field.value || ""}
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value, 10) : "")}
                       />
                     </FormControl>
                     <FormMessage />
@@ -148,7 +148,7 @@ export default function AddAppDialog({
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>App Type</FormLabel>
+                    <FormLabel>Application Type</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
                       defaultValue={field.value}

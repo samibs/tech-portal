@@ -141,7 +141,7 @@ export default function AppCard({ app, onStatusChange }: AppCardProps) {
                   <Pencil className="mr-2 h-4 w-4" />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => window.open(app.replitUrl, '_blank')}>
+                <DropdownMenuItem onClick={() => window.open(app.appUrl, '_blank')}>
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Open URL
                 </DropdownMenuItem>
@@ -166,7 +166,7 @@ export default function AppCard({ app, onStatusChange }: AppCardProps) {
           <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Replit URL</dt>
-              <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 truncate">{app.replitUrl}</dd>
+              <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 truncate">{app.appUrl}</dd>
             </div>
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Port</dt>

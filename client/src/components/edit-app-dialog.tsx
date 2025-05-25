@@ -41,7 +41,7 @@ interface EditAppDialogProps {
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  replitUrl: z.string().min(1, "Replit URL is required").url("Invalid URL format"),
+  appUrl: z.string().min(1, "App URL is required").url("Invalid URL format"),
   port: z.coerce.number().int().min(1, "Port must be at least 1"),
   startCommand: z.string().min(1, "Start command is required"),
   type: z.string().min(1, "Type is required"),
@@ -60,7 +60,7 @@ export default function EditAppDialog({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: app.name,
-      replitUrl: app.replitUrl,
+      appUrl: app.appUrl,
       port: app.port,
       startCommand: app.startCommand,
       type: app.type,
@@ -117,13 +117,13 @@ export default function EditAppDialog({
 
             <FormField
               control={form.control}
-              name="replitUrl"
+              name="appUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Replit URL</FormLabel>
+                  <FormLabel>App URL</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="https://myapp.replit.app" 
+                      placeholder="https://myapp.example.com" 
                       {...field} 
                     />
                   </FormControl>

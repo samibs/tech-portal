@@ -18,7 +18,7 @@ async function checkPortConflicts(app: ReplitApp): Promise<{error: string} | nul
     const allApps = await storage.getApps();
     const runningApps = allApps.filter(a => 
       a.id !== app.id && 
-      a.status === AppStatus.RUNNING
+      a.status === "Running"
     );
     
     // Check primary port conflict
@@ -31,7 +31,8 @@ async function checkPortConflicts(app: ReplitApp): Promise<{error: string} | nul
     
     // Check additional ports if app has them
     if (app.additionalPorts && app.additionalPorts.length > 0) {
-      for (const additionalPort of app.additionalPorts) {
+      const additionalPortsArray = app.additionalPorts.split(',').map(p => parseInt(p.trim()));
+      for (const additionalPort of additionalPortsArray) {
         // Check conflict with any primary port
         const primaryConflict = runningApps.find(a => a.port === additionalPort);
         if (primaryConflict) {
@@ -42,7 +43,7 @@ async function checkPortConflicts(app: ReplitApp): Promise<{error: string} | nul
         
         // Check conflict with any additional port
         for (const runningApp of runningApps) {
-          if (runningApp.additionalPorts && runningApp.additionalPorts.includes(additionalPort)) {
+          if (runningApp.additionalPorts && runningApp.additionalPorts.includes(additionalPort.toString())) {
             return {
               error: `Additional port conflict: Port ${additionalPort} is already in use as additional port by app "${runningApp.name}" (ID: ${runningApp.id})`
             };
@@ -70,7 +71,8 @@ async function checkPortConflicts(app: ReplitApp): Promise<{error: string} | nul
     
     // Check additional ports
     if (app.additionalPorts && app.additionalPorts.length > 0) {
-      for (const additionalPort of app.additionalPorts) {
+      const additionalPortsArray = app.additionalPorts.split(',').map(p => parseInt(p.trim()));
+      for (const additionalPort of additionalPortsArray) {
         const additionalPortConflict = inUsePorts.find(p => p.port === additionalPort);
         if (additionalPortConflict) {
           const conflictApp = await storage.getApp(additionalPortConflict.appId);
@@ -96,7 +98,7 @@ async function checkPortConflicts(app: ReplitApp): Promise<{error: string} | nul
 export async function startApp(app: ReplitApp): Promise<AppControlResult> {
   try {
     // Check if app is already running
-    if (app.status === AppStatus.RUNNING) {
+    if (app.status === "Running") {
       return {
         success: false,
         error: `App ${app.name} is already running`
@@ -156,21 +158,21 @@ export async function startApp(app: ReplitApp): Promise<AppControlResult> {
       };
     }
     
-    // Check if replitUrl is valid
+    // Check if appUrl is valid
     try {
-      new URL(app.replitUrl.startsWith("http") ? app.replitUrl : `http://${app.replitUrl}`);
+      new URL(app.appUrl.startsWith("http") ? app.appUrl : `http://${app.appUrl}`);
     } catch (err) {
       // Log failure
       await storage.createLog({
         appId: app.id,
         action: "Start Failed",
-        details: `Failed to start app: Invalid URL ${app.replitUrl}`,
+        details: `Failed to start app: Invalid URL ${app.appUrl}`,
         status: app.status
       });
       
       return {
         success: false,
-        error: `Invalid URL ${app.replitUrl} for ${app.name}`
+        error: `Invalid URL ${app.appUrl} for ${app.name}`
       };
     }
     
@@ -199,13 +201,13 @@ export async function startApp(app: ReplitApp): Promise<AppControlResult> {
         appId: app.id,
         action: "Started with Warning",
         details: `App ${app.name} started but might not be reachable: ${canConnect.error}`,
-        status: AppStatus.RUNNING
+        status: "Running"
       });
     }
     
     // Simulate successful start and update status
     const updatedApp = await storage.updateApp(app.id, {
-      status: AppStatus.RUNNING,
+      status: "Running",
       lastChecked: new Date()
     });
     
@@ -214,7 +216,7 @@ export async function startApp(app: ReplitApp): Promise<AppControlResult> {
       appId: app.id,
       action: "Started",
       details: `App ${app.name} started successfully (Note: This is a simulation)`,
-      status: AppStatus.RUNNING
+      status: "Running"
     });
     
     return {
@@ -243,7 +245,7 @@ export async function startApp(app: ReplitApp): Promise<AppControlResult> {
 async function simulateConnectionCheck(app: ReplitApp): Promise<{success: boolean, error?: string}> {
   try {
     // This is a simulation, so we'll just return success based on a simple check
-    if (app.replitUrl.includes('localhost') || app.replitUrl.includes('127.0.0.1')) {
+    if (app.appUrl.includes('localhost') || app.appUrl.includes('127.0.0.1')) {
       return {
         success: false,
         error: "Cannot connect to localhost from remote services"
@@ -272,7 +274,7 @@ async function simulateConnectionCheck(app: ReplitApp): Promise<{success: boolea
 export async function stopApp(app: ReplitApp): Promise<AppControlResult> {
   try {
     // Check if app is already stopped
-    if (app.status === AppStatus.STOPPED) {
+    if (app.status === "Stopped") {
       return {
         success: false,
         error: `App ${app.name} is already stopped`
@@ -334,7 +336,7 @@ export async function stopApp(app: ReplitApp): Promise<AppControlResult> {
     
     // Simulate successful stop and update status
     const updatedApp = await storage.updateApp(app.id, {
-      status: AppStatus.STOPPED,
+      status: "Stopped",
       lastChecked: new Date()
     });
     
@@ -343,7 +345,7 @@ export async function stopApp(app: ReplitApp): Promise<AppControlResult> {
       appId: app.id,
       action: "Stopped",
       details: `App ${app.name} stopped successfully (Note: This is a simulation)`,
-      status: AppStatus.STOPPED
+      status: "Stopped"
     });
     
     return {
@@ -401,7 +403,7 @@ export async function terminateGhostProcesses(app: ReplitApp): Promise<{ success
     const processes = await storage.getProcesses(app.id);
     const ghostProcesses = processes.filter(p => 
       // Filter ghost processes (app is stopped but processes are running)
-      app.status !== AppStatus.RUNNING && 
+      app.status !== "Running" && 
       p.status === "Running"
     );
     
@@ -507,12 +509,12 @@ export async function restartApp(app: ReplitApp): Promise<AppControlResult> {
     });
     
     // Special case: if app is in ERROR or UNREACHABLE state, we should try to start it anyway
-    if (app.status === AppStatus.ERROR || app.status === AppStatus.UNREACHABLE) {
+    if (app.status === "Error" || app.status === "Unreachable") {
       console.log(`App ${app.name} is in ${app.status} state, attempting direct start`);
       
       // Update status to STOPPED first
       const updatedApp = await storage.updateApp(app.id, {
-        status: AppStatus.STOPPED,
+        status: "Stopped",
         lastChecked: new Date()
       });
       
@@ -520,7 +522,7 @@ export async function restartApp(app: ReplitApp): Promise<AppControlResult> {
       if (!updatedApp) {
         return {
           success: false,
-          error: `Failed to update app status to ${AppStatus.STOPPED}`
+          error: `Failed to update app status to Stopped`
         };
       }
       const startResult = await startApp(updatedApp);
@@ -536,7 +538,7 @@ export async function restartApp(app: ReplitApp): Promise<AppControlResult> {
         appId: app.id,
         action: "Restarted from Error",
         details: `App ${app.name} restarted successfully from ${app.status} state`,
-        status: AppStatus.RUNNING
+        status: "Running"
       });
       
       return {
@@ -548,7 +550,7 @@ export async function restartApp(app: ReplitApp): Promise<AppControlResult> {
     // Normal restart flow for RUNNING or STOPPED states
     // Stop the app first if it's running
     let currentApp = app;
-    if (app.status === AppStatus.RUNNING) {
+    if (app.status === "Running") {
       const stopResult = await stopApp(app);
       if (!stopResult.success) {
         // Don't fail the whole restart if stop fails, log and continue
@@ -580,7 +582,7 @@ export async function restartApp(app: ReplitApp): Promise<AppControlResult> {
       appId: app.id,
       action: "Restarted",
       details: `App ${app.name} restarted successfully (Note: This is a simulation)`,
-      status: AppStatus.RUNNING
+      status: "Running"
     });
     
     return {

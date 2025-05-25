@@ -1,244 +1,369 @@
-# Tech Portal
+# 🚀 ReplitManager - Centralized Application Monitoring & Management Platform
 
-A comprehensive web application for intelligent application monitoring, performance management, and proactive insights.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6.3-blue)](https://www.typescriptlang.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
+[![Production Ready](https://img.shields.io/badge/Production-Ready-green)](https://github.com/your-org/replitmanager)
 
-## Features
+> **A comprehensive, production-ready web application for monitoring, managing, and controlling Replit applications with advanced process monitoring, endpoint health checks, and automated management capabilities.**
 
-- Real-time application health tracking and monitoring
-- Endpoint monitoring and management
-- Port conflict detection
-- Ghost process management
-- Intelligent restart recommendations
-- Application failure predictions
-- Email notifications for important events
-- Comprehensive logging and analytics
+Perfect for development teams working with **Replit** who need centralized application management, automated monitoring, and intelligent failure prediction.
 
-## Tech Stack
+## ✨ Features
 
-- **Frontend**: React with TypeScript, Tailwind CSS, shadcn/ui components
-- **Backend**: Express.js with TypeScript
-- **Database**: PostgreSQL
-- **ORM**: Drizzle ORM
-- **Email**: Nodemailer (SMTP) with optional SendGrid integration
+### 🔧 **Application Management**
+- **Multi-Application Support** - Manage Frontend, Backend, Database, and other application types
+- **Real-time Status Monitoring** - Live tracking of application health and availability
+- **Automated Health Checks** - HTTP endpoint monitoring with configurable intervals
+- **Application Control** - Start, stop, restart applications with proper error handling
+- **Auto-restart Functionality** - Intelligent automatic restart for failed applications
 
-## Prerequisites
+### 📊 **Advanced Monitoring**
+- **Multi-layered Monitoring System**:
+  - Application status checks (configurable frequency)
+  - Endpoint health monitoring (HTTP response validation)
+  - Port availability monitoring
+  - Process monitoring with ghost process detection
+- **Real-time Dashboard** - Live statistics and system overview
+- **Response Time Tracking** - Endpoint performance metrics
+- **Status Change Logging** - Comprehensive audit trail
 
-- Node.js (v18+)
-- PostgreSQL database
-- SMTP server access for email notifications (optional)
+### 🔐 **Enterprise Security**
+- **Emergency Admin Access** - Secure emergency credentials for initial setup
+- **JWT-based Authentication** - Secure token authentication with refresh capabilities
+- **Role-based Access Control** - Admin and user permission levels
+- **Rate Limiting** - Built-in API protection against abuse
+- **Audit Logging** - Comprehensive activity tracking
 
-## Installation
+### 🤖 **Intelligent Automation**
+- **Ghost Process Detection** - Automatically identify and terminate orphaned processes
+- **Failure Prediction** - AI-powered analysis for proactive issue resolution
+- **Smart Recommendations** - Automated suggestions for system optimization
+- **Configurable Alerts** - Email and in-app notifications for critical events
 
-### 1. Clone the repository
+### 🎨 **Modern UI/UX**
+- **React 18 Frontend** - TypeScript-based with responsive design
+- **Professional Dashboard** - Real-time insights and system health overview
+- **Dark/Light Theme** - User preference-based theming
+- **Mobile-First Design** - Optimized for all device sizes
+- **Real-time Updates** - Live data refresh without page reloads
+
+## 🚀 Quick Start
+
+### **Option 1: Docker (Recommended)**
 
 ```bash
-git clone https://github.com/yourusername/tech-portal.git
-cd tech-portal
+# Clone the repository
+git clone https://github.com/your-org/replitmanager.git
+cd replitmanager
+
+# Copy and configure environment
+cp .env.example .env
+# Edit .env with your settings
+
+# Start with Docker Compose
+docker-compose up -d
+
+# Access the application
+open http://localhost:5050
 ```
 
-### 2. Install dependencies
+### **Option 2: Manual Installation**
 
 ```bash
+# Prerequisites: Node.js 18+, npm 8+
+git clone https://github.com/your-org/replitmanager.git
+cd replitmanager
+
+# Install dependencies
 npm install
-```
 
-### 3. Create .env file
+# Set up environment
+cp .env.example .env
+# Edit .env with your configuration
 
-Create a `.env` file in the root directory with the following variables:
+# Build the application
+npm run build
 
-```
-# Database
-DATABASE_URL=postgresql://username:password@localhost:5432/techportal
+# Start production server
+npm start
 
-# Session Secret
-SESSION_SECRET=your-secret-key
-
-# Port Configuration (Optional - defaults to 5000 for backend)
-PORT=5050
-```
-
-### 4. Setup the database
-
-Create a PostgreSQL database:
-
-```bash
-createdb techportal
-```
-
-Or connect to an existing PostgreSQL instance and create the database:
-
-```bash
-psql -U postgres
-CREATE DATABASE techportal;
-```
-
-### 5. Initialize database schema
-
-Run the database migration to set up all the required tables:
-
-```bash
-npm run db:push
-```
-
-This will create all the necessary tables using the schema defined in `shared/schema.ts`.
-
-## Port Configuration
-
-By default, the application runs on:
-- Backend: Port 5000
-- Frontend (development): Auto-assigned by Vite
-
-To change the ports:
-
-### Changing Backend Port to 5050
-
-1. Edit `server/index.ts` to use port 5050 instead of 5000:
-
-```typescript
-const PORT = process.env.PORT || 5050;
-```
-
-### Changing Frontend Port to 5173
-
-1. Add or modify `vite.config.ts` to specify port 5173:
-
-```typescript
-server: {
-  port: 5173
-}
-```
-
-## Usage
-
-### Development Mode
-
-Start the application in development mode (with hot reloading):
-
-```bash
+# Or start development server
 npm run dev
 ```
 
-This starts both the frontend and backend servers.
+## 📋 Prerequisites
 
-### Production Mode
+- **Node.js** 18.0.0 or higher
+- **npm** 8.0.0 or higher
+- **Modern web browser** (Chrome, Firefox, Safari, Edge)
+- **Git** for version control
 
-Build and start the application in production mode:
+## 🔧 Configuration
+
+### **Environment Variables**
+
+Create a `.env` file from `.env.example`:
+
+```env
+# Database
+DATABASE_URL=./data/techportal.db
+
+# Authentication (CHANGE IN PRODUCTION!)
+JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters
+JWT_REFRESH_SECRET=your-refresh-secret-key-minimum-32-characters
+
+# Server
+NODE_ENV=production
+PORT=5050
+
+# Monitoring Configuration
+CHECK_FREQUENCY=30
+ENDPOINT_CHECK_FREQUENCY=60
+PORT_CHECK_FREQUENCY=120
+PROCESS_CHECK_FREQUENCY=300
+
+# Email Configuration (Optional)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+```
+
+### **First-Time Setup**
+
+1. Start the application: `npm start`
+2. Navigate to `http://localhost:5050`
+3. Use emergency admin credentials for initial access
+4. Create your admin account through the setup process
+5. Begin registering and managing your Replit applications
+
+## 🏗️ Architecture
+
+### **Technology Stack**
+
+**Backend:**
+- **Node.js + Express** - High-performance server framework
+- **TypeScript** - Type-safe development with full IntelliSense
+- **SQLite + Drizzle ORM** - Lightweight, reliable database with type-safe queries
+- **Zod Validation** - Runtime type checking and data validation
+- **JWT Authentication** - Secure token-based authentication
+
+**Frontend:**
+- **React 18** - Modern React with hooks and context API
+- **TypeScript** - Type-safe frontend development
+- **Tailwind CSS** - Utility-first CSS framework
+- **shadcn/ui** - Professional component library
+- **TanStack Query** - Efficient data fetching and caching
+- **Wouter** - Lightweight routing solution
+
+**Monitoring & DevOps:**
+- **Multi-interval Monitoring** - Configurable check frequencies
+- **Docker** - Containerization with multi-stage builds
+- **GitHub Actions** - CI/CD pipeline with automated testing
+- **ESLint + Prettier** - Code quality and formatting
+- **Health Checks** - Production monitoring endpoints
+
+## 📊 API Documentation
+
+### **Authentication**
+```http
+POST /api/auth/login          # User login
+POST /api/auth/refresh        # Token refresh
+POST /api/auth/logout         # User logout
+GET  /api/auth/me            # Get current user info
+```
+
+### **Application Management**
+```http
+GET    /api/apps             # List all applications
+POST   /api/apps             # Create new application
+GET    /api/apps/:id         # Get specific application
+PATCH  /api/apps/:id         # Update application
+DELETE /api/apps/:id         # Delete application
+POST   /api/apps/:id/start   # Start application
+POST   /api/apps/:id/stop    # Stop application
+POST   /api/apps/:id/restart # Restart application
+```
+
+### **Monitoring & Analytics**
+```http
+GET /api/endpoints           # List monitored endpoints
+POST /api/endpoints          # Add endpoint monitoring
+GET /api/ports              # List monitored ports
+GET /api/processes          # List monitored processes
+GET /api/logs               # Get application logs
+GET /api/predictions        # Get failure predictions
+GET /api/recommendations    # Get optimization recommendations
+GET /api/stats              # Get system statistics
+```
+
+### **Health & System**
+```http
+GET /api/health              # Comprehensive health check
+GET /api/ready               # Readiness check
+GET /api/live                # Liveness check
+```
+
+## 🔍 Monitoring Features
+
+### **Application Monitoring**
+- **HTTP Health Checks** - Automated endpoint availability testing
+- **Port Connectivity** - Network port accessibility verification
+- **Response Time Tracking** - Performance metrics collection
+- **Status Change Detection** - Real-time status transition logging
+
+### **Process Management**
+- **Ghost Process Detection** - Identify orphaned/zombie processes
+- **Automatic Cleanup** - Configurable ghost process termination
+- **Process Lifecycle Tracking** - Monitor process start/stop events
+- **Resource Usage Monitoring** - CPU and memory consumption tracking
+
+### **Intelligent Features**
+- **Auto-restart Logic** - Smart application recovery
+- **Failure Prediction** - AI-powered failure analysis
+- **Performance Recommendations** - Optimization suggestions
+- **Alert System** - Configurable notification thresholds
+
+## 🐳 Production Deployment
+
+### **Docker Deployment**
 
 ```bash
-# Build the frontend
+# Production deployment with Docker
+docker-compose -f docker-compose.yml up -d
+
+# With custom environment
+docker-compose --env-file .env.production up -d
+
+# View logs
+docker-compose logs -f
+```
+
+### **Manual Production Setup**
+
+```bash
+# Build for production
 npm run build
 
-# Start the production server
-npm start
+# Start production server
+NODE_ENV=production npm start
+
+# Or use PM2 for process management
+npm install -g pm2
+pm2 start dist/index.js --name replitmanager
 ```
 
-## Database Migration
+For detailed production deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
-If you make changes to the database schema in `shared/schema.ts`, run the following command to apply the changes:
+## 🧪 Development
+
+### **Development Setup**
 
 ```bash
-npm run db:push
+# Install dependencies
+npm install
+
+# Start development server with hot reload
+npm run dev
+
+# Run type checking
+npm run type-check
+
+# Run linting
+npm run lint
+
+# Build for production
+npm run build
 ```
 
-## Email Notifications Setup
-
-1. Navigate to the "Integrations" page in the application
-2. Enable email notifications using the toggle switch
-3. Enter your SMTP server details:
-   - SMTP Host (e.g., smtp.gmail.com)
-   - SMTP Port (e.g., 587)
-   - SMTP Username
-   - SMTP Password
-   - Sender Email
-4. Click "Save Email Settings"
-5. Test your configuration by sending a test email
-
-## SendGrid Integration (Alternative)
-
-For SendGrid integration:
-1. Create a SendGrid account and obtain an API key
-2. Use the following SMTP settings:
-   - SMTP Host: smtp.sendgrid.net
-   - SMTP Port: 587
-   - SMTP Username: apikey
-   - SMTP Password: your-sendgrid-api-key
-
-## Deployment Considerations
-
-### Environment Variables
-
-Ensure the following environment variables are set in your production environment:
-
-- `DATABASE_URL`: PostgreSQL connection string
-- `NODE_ENV`: Set to "production"
-- `SESSION_SECRET`: Secret for session management
-- `PORT`: Backend port (5050)
-
-### Database Backup
-
-Regularly back up your PostgreSQL database:
+### **Database Management**
 
 ```bash
-pg_dump -U username techportal > techportal_backup.sql
+# Generate database schema
+npm run db:generate
+
+# Run migrations
+npm run db:migrate
+
+# Open database studio
+npm run db:studio
+
+# Reset database (development only)
+npm run db:reset
 ```
 
-### Reverse Proxy (Optional)
+### **Docker Development**
 
-For production deployments, consider using Nginx or Apache as a reverse proxy:
+```bash
+# Build development image
+docker build -t replitmanager:dev .
 
-#### Nginx Example Config
+# Run in container
+docker run -p 5050:5050 replitmanager:dev
 
-```nginx
-server {
-    listen 80;
-    server_name yourdomainname.com;
-
-    location / {
-        proxy_pass http://localhost:5173;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    location /api {
-        proxy_pass http://localhost:5050;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
+# Development with compose
+docker-compose -f docker-compose.dev.yml up
 ```
 
-## Monitoring and Maintenance
+## 🤝 Contributing
 
-- The system will automatically monitor applications at the interval specified in Settings
-- Default monitoring interval is 30 seconds
-- Adjust monitoring frequencies in the Settings page
-- View logs and activity in the Logs page
-- Check restart recommendations and predictions regularly
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
-## Troubleshooting
+### **Quick Contribution Steps**
 
-### Database Connection Issues
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
 
-If you encounter database connection issues:
+### **Development Guidelines**
 
-1. Verify the `DATABASE_URL` environment variable is correct
-2. Ensure PostgreSQL is running and accessible
-3. Check database user permissions
+- Follow TypeScript best practices
+- Use ESLint and Prettier for code formatting
+- Write meaningful commit messages
+- Add tests for new features
+- Update documentation as needed
 
-### Email Sending Issues
+## 🔧 Recent Updates
 
-If email notifications aren't working:
+### **v1.0.0 - Production Ready Release**
+- ✅ **Fixed Schema Consistency** - Resolved `replitUrl` vs `appUrl` field naming issues
+- ✅ **Enhanced Monitoring** - Multi-layered monitoring with configurable frequencies
+- ✅ **Improved UI/UX** - Professional dashboard with real-time updates
+- ✅ **Production Deployment** - Docker support and production optimizations
+- ✅ **Security Enhancements** - Emergency admin access and JWT authentication
+- ✅ **Comprehensive Testing** - Full application testing and validation
 
-1. Verify SMTP settings in the Integrations page
-2. Check if your SMTP server requires special settings (like "Allow less secure apps" for Gmail)
-3. Test with SendGrid as an alternative
+## 📝 License
 
-## License
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
-[MIT License](LICENSE)
+## 🆘 Support & Community
+
+- **📖 Documentation**: [Full Documentation](https://github.com/your-org/replitmanager/wiki)
+- **🐛 Bug Reports**: [GitHub Issues](https://github.com/your-org/replitmanager/issues)
+- **💡 Feature Requests**: [GitHub Discussions](https://github.com/your-org/replitmanager/discussions)
+
+## 🙏 Acknowledgments
+
+- Built with ❤️ for the Replit developer community
+- Inspired by the need for centralized application management
+- Thanks to all contributors and users
+
+## 📈 Roadmap
+
+- [ ] **Advanced Metrics** - Prometheus/Grafana integration
+- [ ] **Multi-tenant Support** - Organization and team management
+- [ ] **Advanced AI** - Machine learning for predictive analytics
+- [ ] **Plugin System** - Extensible architecture
+- [ ] **Mobile App** - Native mobile applications
+- [ ] **Cloud Integration** - Multi-cloud deployment support
+
+---
+
+**Made with ❤️ for Replit developers who need better application management tools.**
+
+[⬆ Back to top](#-replitmanager---centralized-application-monitoring--management-platform)

@@ -2,7 +2,7 @@ import {
   AppStatus, 
   AppType, 
   InsertApp, 
-  ReplitApp, 
+  WebApp, 
   Settings, 
   InsertLog, 
   LogEntry,
@@ -12,26 +12,33 @@ import {
   InsertAppPort,
   AppProcess,
   InsertAppProcess,
-  EndpointStatus
+  EndpointStatus,
+  User,
+  InsertUser,
+  UpdateUser,
+  AuditLog,
+  InsertAuditLog
 } from "@shared/schema";
 import { db } from "./db";
 import { 
-  replitApps, 
+  webApps, 
   settings, 
   logEntries, 
   endpoints, 
   appPorts, 
-  appProcesses 
+  appProcesses,
+  users,
+  auditLogs
 } from "@shared/schema";
 import { eq, desc, and, isNull } from "drizzle-orm";
 
 // Storage interface
 export interface IStorage {
   // App management
-  getApps(): Promise<ReplitApp[]>;
-  getApp(id: number): Promise<ReplitApp | undefined>;
-  createApp(app: InsertApp): Promise<ReplitApp>;
-  updateApp(id: number, updates: Partial<ReplitApp>): Promise<ReplitApp | undefined>;
+  getApps(): Promise<WebApp[]>;
+  getApp(id: number): Promise<WebApp | undefined>;
+  createApp(app: InsertApp): Promise<WebApp>;
+  updateApp(id: number, updates: Partial<WebApp>): Promise<WebApp | undefined>;
   deleteApp(id: number): Promise<boolean>;
   
   // Settings management
@@ -64,35 +71,51 @@ export interface IStorage {
   updateProcess(id: number, updates: Partial<AppProcess>): Promise<AppProcess | undefined>;
   deleteProcess(id: number): Promise<boolean>;
   terminateGhostProcesses(appId: number): Promise<number>; // Returns number of terminated processes
+  
+  // User management
+  getUsers(): Promise<User[]>;
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, updates: UpdateUser): Promise<User | undefined>;
+  deleteUser(id: number): Promise<boolean>;
+  updateUserLoginAttempts(id: number, attempts: number, lockedUntil?: Date): Promise<void>;
+  
+  // Audit logging
+  getAuditLogs(limit?: number): Promise<AuditLog[]>;
+  createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
 }
 
 // Database storage implementation
 export class DatabaseStorage implements IStorage {
   // App methods
-  async getApps(): Promise<ReplitApp[]> {
-    return await db.select().from(replitApps);
+  async getApps(): Promise<WebApp[]> {
+    return await db.select().from(webApps);
   }
 
-  async getApp(id: number): Promise<ReplitApp | undefined> {
-    const [app] = await db.select().from(replitApps).where(eq(replitApps.id, id));
+  async getApp(id: number): Promise<WebApp | undefined> {
+    const [app] = await db.select().from(webApps).where(eq(webApps.id, id));
     return app;
   }
 
-  async createApp(insertApp: InsertApp): Promise<ReplitApp> {
+  async createApp(insertApp: InsertApp): Promise<WebApp> {
     const now = new Date();
     
-    // Create the app with default values
-    const [app] = await db.insert(replitApps)
-      .values({
-        ...insertApp,
-        status: AppStatus.STOPPED,
-        lastChecked: now,
-        lastLogs: null,
-        createdAt: now,
-        checkForGhostProcesses: insertApp.checkForGhostProcesses ?? true,
-        healthCheckPath: insertApp.healthCheckPath ?? "/health",
-        additionalPorts: insertApp.additionalPorts ?? []
-      })
+    // Prepare the app data for insertion
+    const appData = {
+      ...insertApp,
+      status: AppStatus.STOPPED,
+      lastChecked: now,
+      lastLogs: null,
+      createdAt: now,
+      checkForGhostProcesses: insertApp.checkForGhostProcesses ?? true,
+      healthCheckPath: insertApp.healthCheckPath ?? "/health",
+      additionalPorts: insertApp.additionalPorts ? JSON.stringify(insertApp.additionalPorts) : null
+    };
+    
+    // Create the app
+    const [app] = await db.insert(webApps)
+      .values(appData)
       .returning();
     
     // Log app creation
@@ -103,9 +126,12 @@ export class DatabaseStorage implements IStorage {
       status: AppStatus.STOPPED
     });
     
-    // For each port, create a port entry
-    if (app.additionalPorts && app.additionalPorts.length > 0) {
-      for (const port of app.additionalPorts) {
+    // Parse additional ports for port creation
+    const additionalPortsArray = insertApp.additionalPorts || [];
+    
+    // For each additional port, create a port entry
+    if (additionalPortsArray.length > 0) {
+      for (const port of additionalPortsArray) {
         await this.createPort({
           appId: app.id,
           port,
@@ -124,14 +150,20 @@ export class DatabaseStorage implements IStorage {
     return app;
   }
 
-  async updateApp(id: number, updates: Partial<ReplitApp>): Promise<ReplitApp | undefined> {
+  async updateApp(id: number, updates: Partial<WebApp>): Promise<WebApp | undefined> {
     // Check if app exists first
     const existingApp = await this.getApp(id);
     if (!existingApp) return undefined;
     
-    const [updatedApp] = await db.update(replitApps)
-      .set(updates)
-      .where(eq(replitApps.id, id))
+    // Handle additionalPorts serialization if it's being updated
+    const updateData = { ...updates };
+    if (updates.additionalPorts) {
+      updateData.additionalPorts = JSON.stringify(updates.additionalPorts);
+    }
+    
+    const [updatedApp] = await db.update(webApps)
+      .set(updateData)
+      .where(eq(webApps.id, id))
       .returning();
     
     return updatedApp;
@@ -143,8 +175,8 @@ export class DatabaseStorage implements IStorage {
     if (!existingApp) return false;
     
     // Delete the app
-    const result = await db.delete(replitApps)
-      .where(eq(replitApps.id, id))
+    const result = await db.delete(webApps)
+      .where(eq(webApps.id, id))
       .returning();
     
     if (result.length > 0) {
@@ -222,10 +254,10 @@ export class DatabaseStorage implements IStorage {
           details: logEntries.details,
           status: logEntries.status,
           timestamp: logEntries.timestamp,
-          appName: replitApps.name
+          appName: webApps.name
         })
         .from(logEntries)
-        .leftJoin(replitApps, eq(logEntries.appId, replitApps.id))
+        .leftJoin(webApps, eq(logEntries.appId, webApps.id))
         .where(eq(logEntries.appId, appId))
         .orderBy(desc(logEntries.timestamp))
         .limit(1000);
@@ -240,10 +272,10 @@ export class DatabaseStorage implements IStorage {
         details: logEntries.details,
         status: logEntries.status,
         timestamp: logEntries.timestamp,
-        appName: replitApps.name
+        appName: webApps.name
       })
       .from(logEntries)
-      .leftJoin(replitApps, eq(logEntries.appId, replitApps.id))
+      .leftJoin(webApps, eq(logEntries.appId, webApps.id))
       .orderBy(desc(logEntries.timestamp))
       .limit(1000);
     
@@ -555,6 +587,92 @@ export class DatabaseStorage implements IStorage {
     }
     
     return runningProcesses.length;
+  }
+
+  // User management methods
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(users.username);
+  }
+
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const now = new Date();
+    
+    const [user] = await db.insert(users)
+      .values({
+        ...insertUser,
+        isActive: true,
+        failedLoginAttempts: 0,
+        createdAt: now,
+        updatedAt: now
+      })
+      .returning();
+    
+    return user;
+  }
+
+  async updateUser(id: number, updates: UpdateUser): Promise<User | undefined> {
+    const existingUser = await this.getUser(id);
+    if (!existingUser) return undefined;
+    
+    const [updatedUser] = await db.update(users)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    
+    return updatedUser;
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    const existingUser = await this.getUser(id);
+    if (!existingUser) return false;
+    
+    const result = await db.delete(users)
+      .where(eq(users.id, id))
+      .returning();
+    
+    return result.length > 0;
+  }
+
+  async updateUserLoginAttempts(id: number, attempts: number, lockedUntil?: Date): Promise<void> {
+    await db.update(users)
+      .set({
+        failedLoginAttempts: attempts,
+        lockedUntil: lockedUntil || null,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id));
+  }
+
+  // Audit logging methods
+  async getAuditLogs(limit: number = 1000): Promise<AuditLog[]> {
+    return await db.select()
+      .from(auditLogs)
+      .orderBy(desc(auditLogs.timestamp))
+      .limit(limit);
+  }
+
+  async createAuditLog(log: InsertAuditLog): Promise<AuditLog> {
+    const [newLog] = await db.insert(auditLogs)
+      .values({
+        ...log,
+        timestamp: new Date()
+      })
+      .returning();
+    
+    return newLog;
   }
 }
 

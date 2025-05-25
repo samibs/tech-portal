@@ -114,8 +114,8 @@ async function checkAllApps(): Promise<void> {
       
       // Handle auto-restart if enabled
       if (settings.autoRestart && 
-          (updatedApp.status === AppStatus.STOPPED || updatedApp.status === AppStatus.UNREACHABLE || 
-           updatedApp.status === AppStatus.ERROR)) {
+          (updatedApp.status === "Stopped" || updatedApp.status === "Unreachable" || 
+           updatedApp.status === "Error")) {
         
         // Attempt to restart the app
         console.log(`Auto-restart attempt for app ${updatedApp.id}: ${updatedApp.name}`);
@@ -139,7 +139,7 @@ async function checkAllApps(): Promise<void> {
               appId: updatedApp.id,
               action: "Auto-restart Success",
               details: `Auto-restart completed successfully`,
-              status: AppStatus.RUNNING
+              status: "Running"
             });
           } else {
             console.error(`Auto-restart failed for app ${updatedApp.id}: ${result.error}`);
@@ -171,7 +171,7 @@ async function checkAllApps(): Promise<void> {
 // Check status of a single app
 async function checkAppStatus(app: ReplitApp): Promise<void> {
   const previousStatus = app.status;
-  let newStatus: AppStatus;
+  let newStatus: string;
   let details = "";
   
   try {
@@ -206,7 +206,7 @@ async function checkAppStatus(app: ReplitApp): Promise<void> {
     console.error(`Error checking app ${app.id} (${app.name}):`, error);
     
     // Set error status and log it
-    newStatus = AppStatus.ERROR;
+    newStatus = "Error";
     details = `Error checking status: ${(error as Error).message}`;
     
     await storage.updateApp(app.id, { 
@@ -224,10 +224,10 @@ async function checkAppStatus(app: ReplitApp): Promise<void> {
 }
 
 // Check HTTP status
-async function checkHttpStatus(app: ReplitApp): Promise<AppStatus> {
+async function checkHttpStatus(app: ReplitApp): Promise<string> {
   try {
     // Format URL (if it doesn't include http:// or https://)
-    let url = app.replitUrl;
+    let url = app.appUrl;
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       url = `https://${url}`;
     }
@@ -253,32 +253,32 @@ async function checkHttpStatus(app: ReplitApp): Promise<AppStatus> {
       
       // Check response status
       if (response.ok) {
-        return AppStatus.RUNNING;
+        return "Running";
       } else {
-        return AppStatus.UNREACHABLE;
+        return "Unreachable";
       }
     } catch (error) {
       clearTimeout(timeout);
       
       // Check if it's a timeout error
       if ((error as Error).name === 'AbortError') {
-        return AppStatus.UNREACHABLE;
+        return "Unreachable";
       }
       
       // Other fetch errors
-      return AppStatus.STOPPED;
+      return "Stopped";
     }
   } catch (error) {
     console.error(`HTTP check error for app ${app.id}:`, error);
-    return AppStatus.ERROR;
+    return "Error";
   }
 }
 
 // Check port status
-async function checkPortStatus(app: ReplitApp): Promise<AppStatus> {
+async function checkPortStatus(app: ReplitApp): Promise<string> {
   return new Promise((resolve) => {
     // Extract domain from URL
-    let domain = app.replitUrl;
+    let domain = app.appUrl;
     
     // Remove protocol if present
     if (domain.startsWith('http://') || domain.startsWith('https://')) {
@@ -296,17 +296,17 @@ async function checkPortStatus(app: ReplitApp): Promise<AppStatus> {
     
     socket.on('connect', () => {
       socket.destroy();
-      resolve(AppStatus.RUNNING);
+      resolve("Running");
     });
     
     socket.on('timeout', () => {
       socket.destroy();
-      resolve(AppStatus.UNREACHABLE);
+      resolve("Unreachable");
     });
     
     socket.on('error', () => {
       socket.destroy();
-      resolve(AppStatus.STOPPED);
+      resolve("Stopped");
     });
     
     // Attempt to connect
@@ -325,7 +325,7 @@ async function checkAllEndpoints(): Promise<void> {
     for (const endpoint of endpoints) {
       // Skip endpoints for apps that are not running
       const app = await storage.getApp(endpoint.appId);
-      if (!app || app.status !== AppStatus.RUNNING) continue;
+      if (!app || app.status !== "Running") continue;
       
       await checkEndpointStatus(endpoint, app);
     }
@@ -387,7 +387,7 @@ async function checkEndpointStatus(endpoint: Endpoint, app: ReplitApp): Promise<
 async function checkEndpointAvailability(endpoint: Endpoint, app: ReplitApp): Promise<EndpointStatus> {
   try {
     // Format base URL
-    let baseUrl = app.replitUrl;
+    let baseUrl = app.appUrl;
     if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
       baseUrl = `https://${baseUrl}`;
     }
@@ -460,7 +460,7 @@ async function checkAllPorts(): Promise<void> {
     for (const port of ports) {
       // Skip ports for apps that are not running
       const app = await storage.getApp(port.appId);
-      if (!app || app.status !== AppStatus.RUNNING) continue;
+      if (!app || app.status !== "Running") continue;
       
       await checkPortAvailability(port, app);
     }
@@ -477,7 +477,7 @@ async function checkPortAvailability(port: AppPort, app: ReplitApp): Promise<voi
   
   try {
     // Check port availability
-    newStatus = await checkSpecificPortStatus(port.port, app.replitUrl);
+    newStatus = await checkSpecificPortStatus(port.port, app.appUrl);
     
     // Update last checked time and status
     await storage.updatePort(port.id, { 
@@ -587,7 +587,7 @@ async function checkAllProcesses(): Promise<void> {
           // Get ghost processes count
           const processes = await storage.getProcesses(app.id);
           const ghostProcessCount = processes.filter(p => 
-            app.status !== AppStatus.RUNNING && 
+            app.status !== "Running" && 
             p.status === "Running"
           ).length;
           
@@ -633,7 +633,7 @@ async function checkProcessStatus(process: AppProcess, app: ReplitApp): Promise<
   try {
     // In a real implementation, we would check the actual process
     // For simulation, we'll check if the app is running
-    newStatus = app.status === AppStatus.RUNNING ? "Running" : "Terminated";
+    newStatus = app.status === "Running" ? "Running" : "Terminated";
     
     // Update last checked time and status if changed
     if (previousStatus !== newStatus) {

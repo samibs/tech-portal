@@ -41,7 +41,7 @@ export async function analyzeAppWithAI(
         id: app.id,
         name: app.name,
         type: app.type,
-        url: app.replitUrl,
+        url: app.appUrl,
         status: app.status,
         resourceUsage: app.resourceUsage || 'Unknown',
         lastChecked: app.lastChecked ? new Date(app.lastChecked).toISOString() : 'Never'
@@ -158,10 +158,10 @@ export async function analyzeSystemWithAI(
       systemOverview: {
         totalApps: apps.length,
         appsByStatus: {
-          running: apps.filter(app => app.status === AppStatus.RUNNING).length,
-          stopped: apps.filter(app => app.status === AppStatus.STOPPED).length,
-          unreachable: apps.filter(app => app.status === AppStatus.UNREACHABLE).length,
-          error: apps.filter(app => app.status === AppStatus.ERROR).length
+          running: apps.filter(app => app.status === "Running").length,
+          stopped: apps.filter(app => app.status === "Stopped").length,
+          unreachable: apps.filter(app => app.status === "Unreachable").length,
+          error: apps.filter(app => app.status === "Error").length
         },
         appsByType: {
           frontend: apps.filter(app => app.type === 'Frontend').length,
