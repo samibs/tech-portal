@@ -89,14 +89,60 @@ npm run db:push
 
 ### 6. Start the Application
 
-#### Development Mode
+#### Option 1: Using Management Scripts (Recommended)
 
+**Command Prompt:**
+```cmd
+REM Start in development mode
+techportal.bat dev
+
+REM Start in production mode
+techportal.bat start
+
+REM Check application status
+techportal.bat status
+
+REM Stop the application
+techportal.bat stop
+
+REM View logs
+techportal.bat logs
+
+REM Follow logs in real-time
+techportal.bat follow
+```
+
+**PowerShell:**
+```powershell
+# Start in development mode
+.\techportal.ps1 dev
+
+# Start in production mode
+.\techportal.ps1 start
+
+# Check application status
+.\techportal.ps1 status
+
+# Stop the application
+.\techportal.ps1 stop
+
+# View logs
+.\techportal.ps1 logs
+
+# Follow logs in real-time
+.\techportal.ps1 follow
+```
+
+📖 **For complete management script documentation, see [MANAGEMENT.md](./MANAGEMENT.md)**
+
+#### Option 2: Manual npm Commands
+
+**Development Mode:**
 ```
 npm run dev
 ```
 
-#### Production Mode
-
+**Production Mode:**
 ```
 npm run build
 npm start

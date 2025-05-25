@@ -83,6 +83,9 @@ npm install
 cp .env.example .env
 # Edit .env with your configuration
 
+# Run initial setup
+node setup.js
+
 # Build the application
 npm run build
 
@@ -92,6 +95,60 @@ npm start
 # Or start development server
 npm run dev
 ```
+
+### **Option 3: Using Management Scripts (Recommended)**
+
+We provide cross-platform management scripts for easy application control:
+
+#### **Linux/macOS**
+```bash
+# Make script executable (first time only)
+chmod +x techportal.sh
+
+# Start in development mode
+./techportal.sh dev
+
+# Start in production mode
+./techportal.sh start
+
+# Check status
+./techportal.sh status
+
+# Stop the application
+./techportal.sh stop
+```
+
+#### **Windows Command Prompt**
+```cmd
+REM Start in development mode
+techportal.bat dev
+
+REM Start in production mode
+techportal.bat start
+
+REM Check status
+techportal.bat status
+
+REM Stop the application
+techportal.bat stop
+```
+
+#### **Windows PowerShell**
+```powershell
+# Start in development mode
+.\techportal.ps1 dev
+
+# Start in production mode
+.\techportal.ps1 start
+
+# Check status
+.\techportal.ps1 status
+
+# Stop the application
+.\techportal.ps1 stop
+```
+
+📖 **For detailed management script documentation, see [MANAGEMENT.md](./MANAGEMENT.md)**
 
 ## 📋 Prerequisites
 

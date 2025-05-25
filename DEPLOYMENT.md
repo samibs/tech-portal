@@ -26,6 +26,48 @@ curl http://localhost:3000/api/health
 
 ### Manual Deployment
 
+#### Option 1: Using Management Scripts (Recommended)
+
+**Linux/macOS:**
+```bash
+# Install dependencies and build
+npm ci --only=production
+
+# Start in production mode
+./techportal.sh start
+
+# Check status
+./techportal.sh status
+
+# View logs
+./techportal.sh logs
+
+# Stop if needed
+./techportal.sh stop
+```
+
+**Windows:**
+```cmd
+REM Install dependencies and build
+npm ci --only=production
+
+REM Start in production mode
+techportal.bat start
+
+REM Check status
+techportal.bat status
+
+REM View logs
+techportal.bat logs
+
+REM Stop if needed
+techportal.bat stop
+```
+
+📖 **For complete management script documentation, see [MANAGEMENT.md](./MANAGEMENT.md)**
+
+#### Option 2: Manual npm Commands
+
 ```bash
 # Install dependencies
 npm ci --only=production

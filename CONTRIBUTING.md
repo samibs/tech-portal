@@ -47,9 +47,25 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
    ```
 
 7. **Start the development server**:
+   
+   **Option 1: Using Management Scripts (Recommended)**
+   ```bash
+   # Linux/macOS
+   ./techportal.sh dev
+   
+   # Windows Command Prompt
+   techportal.bat dev
+   
+   # Windows PowerShell
+   .\techportal.ps1 dev
+   ```
+   
+   **Option 2: Direct npm command**
    ```bash
    npm run dev
    ```
+
+📖 **For complete management script documentation, see [MANAGEMENT.md](./MANAGEMENT.md)**
 
 ## 📝 How to Contribute
 
