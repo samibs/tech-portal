@@ -1,0 +1,148 @@
+# TechPortal Project Intelligence (.clinerules)
+
+## Project Context
+This is TechPortal - a comprehensive web application for monitoring, managing, and controlling other web applications. It's production-ready with cross-platform management scripts and comprehensive documentation.
+
+## Critical Implementation Paths
+
+### Management Scripts Pattern
+- **Always maintain identical command syntax** across all platforms (Linux/macOS/Windows)
+- **Use platform-specific implementations** but unified interfaces
+- **PID file management** is critical for reliable process tracking
+- **Graceful shutdown** with SIGTERM → SIGKILL fallback pattern
+- **Color output** enhances user experience significantly
+
+### Documentation Strategy
+- **Cross-reference everything** - each doc file should reference others
+- **Platform-specific examples** are essential for Windows users
+- **Management scripts should be the recommended approach** in all docs
+- **Keep MANAGEMENT.md as the authoritative script documentation**
+
+### File Organization Patterns
+- **Memory bank structure** follows hierarchy: projectbrief → context files → activeContext → progress
+- **Management scripts** go in root directory for easy access
+- **Documentation files** use consistent naming (README-WINDOWS.md, DEPLOYMENT.md, etc.)
+
+## User Preferences & Workflow
+
+### Documentation Updates
+- **Always update all relevant documentation** when adding new features
+- **Maintain consistency** across README.md, README-WINDOWS.md, DEPLOYMENT.md, CONTRIBUTING.md
+- **Use "Option 1/2/3" pattern** with management scripts as recommended option
+- **Include both script examples AND manual npm commands** for flexibility
+
+### Script Development
+- **Test cross-platform compatibility** is essential
+- **Error handling with user-friendly messages** is priority
+- **Comprehensive help systems** with examples
+- **Status reporting with clear indicators** (✅ ❌ 🔄)
+
+## Project-Specific Patterns
+
+### Technology Stack Decisions
+- **React 18 + TypeScript** for frontend type safety
+- **Express + TypeScript** for backend consistency
+- **SQLite + Drizzle ORM** for simplicity and portability
+- **JWT with refresh tokens** for stateless authentication
+- **shadcn/ui + Tailwind** for modern, accessible UI
+
+### Architecture Principles
+- **Layered architecture** with clear separation of concerns
+- **Modular design** for maintainability
+- **Cross-platform first** - everything must work on Windows/Linux/macOS
+- **Type safety throughout** - TypeScript everywhere
+- **Production ready from day one** - no prototype code
+
+### Security Implementation
+- **Defense in depth** - multiple security layers
+- **Input validation with Zod** for runtime safety
+- **Rate limiting** to prevent abuse
+- **Secure defaults** in all configurations
+- **Environment variables** for all secrets
+
+## Known Challenges & Solutions
+
+### Cross-Platform Process Management
+- **Challenge**: Different process management on Windows vs Unix
+- **Solution**: Platform-specific scripts with identical interfaces
+- **Key insight**: PID files are reliable across all platforms
+
+### Documentation Maintenance
+- **Challenge**: Keeping multiple documentation files in sync
+- **Solution**: Systematic updates to all relevant files when making changes
+- **Key insight**: Users start from different documentation files
+
+### User Experience Consistency
+- **Challenge**: Different command syntax expectations per platform
+- **Solution**: Identical command syntax with platform-specific implementations
+- **Key insight**: Consistency trumps platform conventions
+
+## Evolution of Project Decisions
+
+### Management Scripts Evolution
+1. **Started with**: Manual npm commands only
+2. **Evolved to**: Cross-platform management scripts
+3. **Current state**: Scripts as recommended approach with npm fallback
+4. **Lesson**: Unified interfaces dramatically improve user experience
+
+### Documentation Evolution
+1. **Started with**: Basic README
+2. **Evolved to**: Platform-specific guides and comprehensive documentation
+3. **Current state**: Complete documentation ecosystem with cross-references
+4. **Lesson**: Documentation is as important as code for adoption
+
+### Architecture Evolution
+1. **Started with**: Basic full-stack application
+2. **Evolved to**: Production-ready with comprehensive monitoring
+3. **Current state**: Enterprise-grade with management automation
+4. **Lesson**: Building for production from the start saves refactoring
+
+## Tool Usage Patterns
+
+### Development Workflow
+- **Use management scripts** for all development tasks
+- **Update documentation** immediately when adding features
+- **Test cross-platform** before considering features complete
+- **Memory bank updates** when significant changes are made
+
+### File Management
+- **Root directory** for user-facing scripts and documentation
+- **memory-bank/** for project intelligence and context
+- **Consistent naming** for all documentation files
+- **Cross-references** between related documentation
+
+## Critical Success Factors
+
+### User Adoption
+- **Simplicity** - single commands for complex operations
+- **Consistency** - same experience across platforms
+- **Documentation** - comprehensive guides for all scenarios
+- **Reliability** - robust error handling and recovery
+
+### Maintainability
+- **Type safety** - TypeScript throughout
+- **Modular design** - clear separation of concerns
+- **Comprehensive documentation** - both user and developer focused
+- **Testing strategy** - manual testing with future automation plans
+
+### Production Readiness
+- **Security first** - authentication, validation, rate limiting
+- **Monitoring** - health checks and status reporting
+- **Deployment options** - Docker and manual deployment
+- **Cross-platform** - Windows, Linux, macOS support
+
+## Future Considerations
+
+### Scalability Preparation
+- **Stateless design** ready for horizontal scaling
+- **Database migration path** to PostgreSQL identified
+- **Service boundaries** defined for microservice extraction
+- **Configuration management** via environment variables
+
+### Feature Development Priority
+1. **Testing infrastructure** - automated testing setup
+2. **Advanced monitoring** - custom metrics and analytics
+3. **AI features** - failure prediction and recommendations
+4. **Enterprise features** - multi-tenancy and advanced security
+
+This project represents a mature, production-ready application with excellent cross-platform support and comprehensive management capabilities. The management scripts and documentation ecosystem are key differentiators that significantly improve the user experience.
