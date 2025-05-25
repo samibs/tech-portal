@@ -2,7 +2,7 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { AppType, ReplitApp } from "@shared/schema";
+import { AppType, WebApp } from "@shared/schema";
 import { updateApp } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,7 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 interface EditAppDialogProps {
-  app: ReplitApp;
+  app: WebApp;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAppUpdated: () => void;
@@ -95,7 +95,7 @@ export default function EditAppDialog({
         <DialogHeader>
           <DialogTitle>Edit Application</DialogTitle>
           <DialogDescription>
-            Update the details for this Replit application.
+            Update the details for this application.
           </DialogDescription>
         </DialogHeader>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ReplitApp } from "@shared/schema";
+import { WebApp } from "@shared/schema";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface AppCardProps {
-  app: ReplitApp;
+  app: WebApp;
   onStatusChange: () => void;
 }
 
@@ -165,7 +165,7 @@ export default function AppCard({ app, onStatusChange }: AppCardProps) {
         <CardContent className="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:p-6">
           <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
             <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Replit URL</dt>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">App URL</dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 truncate">{app.appUrl}</dd>
             </div>
             <div className="sm:col-span-1">

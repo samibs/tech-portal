@@ -120,7 +120,7 @@ export default function Settings() {
                     <CardHeader>
                       <CardTitle>Monitoring Settings</CardTitle>
                       <CardDescription>
-                        Configure how Tech Portal monitors your Replit applications
+                        Configure how Tech Portal monitors your applications
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">

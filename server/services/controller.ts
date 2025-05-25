@@ -1,10 +1,10 @@
 import { spawn, ChildProcess } from "child_process";
 import { storage } from "../storage";
-import { ReplitApp, AppStatus, AppProcess } from "@shared/schema";
+import { WebApp, AppStatus, AppProcess } from "@shared/schema";
 
 interface AppControlResult {
   success: boolean;
-  app?: ReplitApp;
+  app?: WebApp;
   error?: string;
 }
 
@@ -12,7 +12,7 @@ interface AppControlResult {
 const runningProcesses: Map<number, ChildProcess> = new Map();
 
 // Check for port conflicts with other running apps
-async function checkPortConflicts(app: ReplitApp): Promise<{error: string} | null> {
+async function checkPortConflicts(app: WebApp): Promise<{error: string} | null> {
   try {
     // Get all running apps
     const allApps = await storage.getApps();
@@ -95,7 +95,7 @@ async function checkPortConflicts(app: ReplitApp): Promise<{error: string} | nul
 }
 
 // Start an app
-export async function startApp(app: ReplitApp): Promise<AppControlResult> {
+export async function startApp(app: WebApp): Promise<AppControlResult> {
   try {
     // Check if app is already running
     if (app.status === "Running") {
@@ -121,11 +121,11 @@ export async function startApp(app: ReplitApp): Promise<AppControlResult> {
       status: app.status
     });
     
-    // In a real implementation, this would use the Replit API to start the app
-    // Since direct control is limited in Replit's environment, this is a simplified version
+    // In a real implementation, this would use the API to start the app
+    // Since direct control is limited in app's environment, this is a simplified version
     
     // Documentation on limitations
-    console.log(`NOTE: Limited control within Replit environment. In a real implementation, this would use Replit's API to start ${app.name}`);
+    console.log(`NOTE: Limited control within app environment. In a real implementation, this would use app's API to start ${app.name}`);
     
     // Validate the startCommand and port before proceeding
     if (!app.startCommand || app.startCommand.trim() === '') {
@@ -242,7 +242,7 @@ export async function startApp(app: ReplitApp): Promise<AppControlResult> {
 }
 
 // Helper function to simulate checking if we can connect to the app
-async function simulateConnectionCheck(app: ReplitApp): Promise<{success: boolean, error?: string}> {
+async function simulateConnectionCheck(app: WebApp): Promise<{success: boolean, error?: string}> {
   try {
     // This is a simulation, so we'll just return success based on a simple check
     if (app.appUrl.includes('localhost') || app.appUrl.includes('127.0.0.1')) {
@@ -271,7 +271,7 @@ async function simulateConnectionCheck(app: ReplitApp): Promise<{success: boolea
 }
 
 // Stop an app
-export async function stopApp(app: ReplitApp): Promise<AppControlResult> {
+export async function stopApp(app: WebApp): Promise<AppControlResult> {
   try {
     // Check if app is already stopped
     if (app.status === "Stopped") {
@@ -289,11 +289,11 @@ export async function stopApp(app: ReplitApp): Promise<AppControlResult> {
       status: app.status
     });
     
-    // In a real implementation, this would use the Replit API to stop the app
-    // Since direct control is limited in Replit's environment, this is a simplified version
+    // In a real implementation, this would use the API to stop the app
+    // Since direct control is limited in app's environment, this is a simplified version
     
     // Documentation on limitations
-    console.log(`NOTE: Limited control within Replit environment. In a real implementation, this would use Replit's API to stop ${app.name}`);
+    console.log(`NOTE: Limited control within app environment. In a real implementation, this would use API to stop ${app.name}`);
     
     // Validate app details
     if (!app.name || app.name.trim() === '') {
@@ -371,7 +371,7 @@ export async function stopApp(app: ReplitApp): Promise<AppControlResult> {
 }
 
 // Terminate ghost processes for an app
-export async function terminateGhostProcesses(app: ReplitApp): Promise<{ success: boolean, terminatedCount: number, error?: string }> {
+export async function terminateGhostProcesses(app: WebApp): Promise<{ success: boolean, terminatedCount: number, error?: string }> {
   try {
     // Validate app
     if (!app.id) {
@@ -483,7 +483,7 @@ export async function terminateGhostProcesses(app: ReplitApp): Promise<{ success
 }
 
 // Restart an app
-export async function restartApp(app: ReplitApp): Promise<AppControlResult> {
+export async function restartApp(app: WebApp): Promise<AppControlResult> {
   try {
     // Validate app
     if (!app.name || app.name.trim() === '') {

@@ -66,7 +66,7 @@ export default function ChangeFrequencyDialog({
         <DialogHeader>
           <DialogTitle>Change Check Frequency</DialogTitle>
           <DialogDescription>
-            Set how often ReplitMaster should check the status of your applications.
+            Set how often Tech-Portal should check the status of your applications.
           </DialogDescription>
         </DialogHeader>
         

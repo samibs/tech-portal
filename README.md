@@ -1,14 +1,14 @@
-# 🚀 ReplitManager - Centralized Application Monitoring & Management Platform
+# 🚀 Tech-Portal- Centralized Application Monitoring & Management Platform
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6.3-blue)](https://www.typescriptlang.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
-[![Production Ready](https://img.shields.io/badge/Production-Ready-green)](https://github.com/your-org/replitmanager)
+[![Production Ready](https://img.shields.io/badge/Production-Ready-green)](https://github.com/your-org/tech-portal)
 
-> **A comprehensive, production-ready web application for monitoring, managing, and controlling Replit applications with advanced process monitoring, endpoint health checks, and automated management capabilities.**
+> **A comprehensive, production-ready web application for monitoring, managing, and controlling web applications with advanced process monitoring, endpoint health checks, and automated management capabilities.**
 
-Perfect for development teams working with **Replit** who need centralized application management, automated monitoring, and intelligent failure prediction.
+Perfect for development teams who need centralized application management, automated monitoring, and intelligent failure prediction.
 
 ## ✨ Features
 
@@ -55,8 +55,8 @@ Perfect for development teams working with **Replit** who need centralized appli
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/replitmanager.git
-cd replitmanager
+git clone https://github.com/your-org/tech-portal.git
+cd tech-portal
 
 # Copy and configure environment
 cp .env.example .env
@@ -73,8 +73,8 @@ open http://localhost:5050
 
 ```bash
 # Prerequisites: Node.js 18+, npm 8+
-git clone https://github.com/your-org/replitmanager.git
-cd replitmanager
+git clone https://github.com/your-org/tech-portal.git
+cd tech-portal
 
 # Install dependencies
 npm install
@@ -137,7 +137,7 @@ SMTP_PASS=your-app-password
 2. Navigate to `http://localhost:5050`
 3. Use emergency admin credentials for initial access
 4. Create your admin account through the setup process
-5. Begin registering and managing your Replit applications
+5. Begin registering and managing your web applications
 
 ## 🏗️ Architecture
 
@@ -252,7 +252,7 @@ NODE_ENV=production npm start
 
 # Or use PM2 for process management
 npm install -g pm2
-pm2 start dist/index.js --name replitmanager
+pm2 start dist/index.js --name tech-portal
 ```
 
 For detailed production deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
@@ -298,10 +298,10 @@ npm run db:reset
 
 ```bash
 # Build development image
-docker build -t replitmanager:dev .
+docker build -t tech-portal:dev .
 
 # Run in container
-docker run -p 5050:5050 replitmanager:dev
+docker run -p 5050:5050 tech-portal:dev
 
 # Development with compose
 docker-compose -f docker-compose.dev.yml up
@@ -330,7 +330,7 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 ## 🔧 Recent Updates
 
 ### **v1.0.0 - Production Ready Release**
-- ✅ **Fixed Schema Consistency** - Resolved `replitUrl` vs `appUrl` field naming issues
+- ✅ **Fixed Schema Consistency** - Resolved `AppsUrl` vs `appUrl` field naming issues
 - ✅ **Enhanced Monitoring** - Multi-layered monitoring with configurable frequencies
 - ✅ **Improved UI/UX** - Professional dashboard with real-time updates
 - ✅ **Production Deployment** - Docker support and production optimizations
@@ -343,13 +343,13 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 🆘 Support & Community
 
-- **📖 Documentation**: [Full Documentation](https://github.com/your-org/replitmanager/wiki)
-- **🐛 Bug Reports**: [GitHub Issues](https://github.com/your-org/replitmanager/issues)
-- **💡 Feature Requests**: [GitHub Discussions](https://github.com/your-org/replitmanager/discussions)
+- **📖 Documentation**: [Full Documentation](https://github.com/your-org/tech-portal/wiki)
+- **🐛 Bug Reports**: [GitHub Issues](https://github.com/your-org/tech-portal/issues)
+- **💡 Feature Requests**: [GitHub Discussions](https://github.com/your-org/tech-portal/discussions)
 
 ## 🙏 Acknowledgments
 
-- Built with ❤️ for the Replit developer community
+- Built with ❤️ for the developer community
 - Inspired by the need for centralized application management
 - Thanks to all contributors and users
 
@@ -364,6 +364,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-**Made with ❤️ for Replit developers who need better application management tools.**
+**Made with ❤️ for developers who need better application management tools.**
 
-[⬆ Back to top](#-replitmanager---centralized-application-monitoring--management-platform)
+[⬆ Back to top](#-tech-portal---centralized-application-monitoring--management-platform)

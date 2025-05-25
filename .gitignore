@@ -120,4 +120,3 @@ Thumbs.db
 *.tar.gz
 server/public
 vite.config.ts.*
-.replit

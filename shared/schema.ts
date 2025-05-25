@@ -89,11 +89,11 @@ export enum AppType {
   OTHER = "Other"
 }
 
-// App schema (renamed from replitApps to webApps)
+// App schema (renamed from Apps to webApps)
 export const webApps = sqliteTable("web_apps", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
-  appUrl: text("app_url").notNull(), // Changed from replitUrl to appUrl
+  appUrl: text("app_url").notNull(), // Changed from AppsUrl to appUrl
   startCommand: text("start_command").notNull(),
   port: integer("port").notNull(),
   type: text("type").notNull(), // Will use AppType enum
@@ -296,7 +296,3 @@ export const insertAppProcessSchema = createInsertSchema(appProcesses)
 
 export type InsertAppProcess = z.infer<typeof insertAppProcessSchema>;
 export type AppProcess = typeof appProcesses.$inferSelect;
-
-// Legacy exports for backward compatibility (will be removed in future versions)
-export const replitApps = webApps;
-export type ReplitApp = WebApp;

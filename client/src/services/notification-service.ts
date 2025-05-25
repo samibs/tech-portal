@@ -1,5 +1,5 @@
 import { Notification } from "@/contexts/NotificationContext";
-import { AppStatus, ReplitApp } from "@shared/schema";
+import { AppStatus, WebApp } from "@shared/schema";
 import { AppPredictionModel } from "@/lib/api";
 
 type NotificationData = Omit<Notification, "id" | "timestamp" | "read">;
@@ -8,7 +8,7 @@ type NotificationData = Omit<Notification, "id" | "timestamp" | "read">;
  * Generates a notification when an app changes status
  */
 export function generateStatusChangeNotification(
-  app: ReplitApp,
+  app: WebApp,
   previousStatus: AppStatus,
   newStatus: AppStatus
 ): NotificationData | null {

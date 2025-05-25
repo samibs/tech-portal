@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { ReplitApp, AppStatus, LogEntry } from "@shared/schema";
+import { WebApp, AppStatus, LogEntry } from "@shared/schema";
 import { RestartRecommendation } from "./recommendation";
 
 // Initialize Anthropic client
@@ -15,8 +15,8 @@ const MODEL = 'claude-3-7-sonnet-20250219';
  * Performs AI-powered analysis of app logs and metrics to generate insights and recommendations
  */
 export async function analyzeAppWithAI(
-  app: ReplitApp, 
-  logs: LogEntry[], 
+  app: WebApp,
+  logs: LogEntry[],
   metrics: any, 
   existingRecommendation?: RestartRecommendation
 ): Promise<{
@@ -146,7 +146,7 @@ Keep insights concise (15-25 words each) and focused on technical root cause ana
  * Analyzes system-wide metrics and patterns to generate strategic insights
  */
 export async function analyzeSystemWithAI(
-  apps: ReplitApp[], 
+  apps: WebApp[],
   recentRecommendations: RestartRecommendation[]
 ): Promise<string[]> {
   try {

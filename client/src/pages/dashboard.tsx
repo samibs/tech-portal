@@ -11,7 +11,7 @@ import ActivityTimeline from '@/components/activity-timeline';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AppType, ReplitApp } from '@shared/schema';
+import { AppType, WebApp } from '@shared/schema';
 import { Plus, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -31,7 +31,7 @@ export default function Dashboard() {
     refetchStats 
   } = useApps();
 
-  const filteredApps = apps?.filter((app: ReplitApp) => {
+  const filteredApps = apps?.filter((app: WebApp) => {
     const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = filterType === 'all' || app.type === filterType;
     return matchesSearch && matchesType;
@@ -123,7 +123,7 @@ export default function Dashboard() {
               <div className="sm:flex-auto">
                 <h2 className="text-lg font-medium text-gray-900 dark:text-white">Registered Applications</h2>
                 <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-                  Status and controls for all your registered Replit applications.
+                  Status and controls for all your registered applications.
                 </p>
               </div>
               <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
@@ -161,11 +161,11 @@ export default function Dashboard() {
                 </div>
               ) : filteredApps.length === 0 ? (
                 <div className="text-center py-10">
-                  <p className="text-gray-500 dark:text-gray-400">No applications found. Add your first Replit app to get started!</p>
+                  <p className="text-gray-500 dark:text-gray-400">No applications found. Add your first app to get started!</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {filteredApps.map((app: ReplitApp) => (
+                  {filteredApps.map((app: WebApp) => (
                     <AppCard
                       key={app.id}
                       app={app}

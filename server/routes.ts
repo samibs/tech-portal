@@ -182,7 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "App start simulation successful", 
           app: result.app,
           simulation: true,
-          details: "Note: This is a simulation of app control. In a production environment, this would connect to the actual Replit API."
+          details: "Note: This is a simulation of app control. In a production environment, this would connect to the actual API."
         });
       } else {
         res.status(500).json({ 
@@ -215,7 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "App stop simulation successful", 
           app: result.app,
           simulation: true,
-          details: "Note: This is a simulation of app control. In a production environment, this would connect to the actual Replit API."
+          details: "Note: This is a simulation of app control. In a production environment, this would connect to the actual API."
         });
       } else {
         res.status(500).json({ 
@@ -248,7 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "App restart simulation successful", 
           app: result.app,
           simulation: true,
-          details: "Note: This is a simulation of app control. In a production environment, this would connect to the actual Replit API."
+          details: "Note: This is a simulation of app control. In a production environment, this would connect to the actual API."
         });
       } else {
         res.status(500).json({ 
@@ -704,7 +704,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ? "No ghost processes found" 
             : `Successfully terminated ${result.terminatedCount} ghost processes`,
           simulation: true,
-          details: "Note: This is a simulation of ghost process termination. In a production environment, this would connect to the actual Replit API."
+          details: "Note: This is a simulation of ghost process termination. In a production environment, this would connect to the actual API."
         });
       } else {
         res.status(500).json({ 

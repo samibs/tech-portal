@@ -1,9 +1,9 @@
 import fetch from "node-fetch";
 import net from "net";
 import { storage } from "../storage";
-import { 
-  ReplitApp, 
-  AppStatus, 
+import {
+  WebApp,
+  AppStatus,
   Endpoint, 
   EndpointStatus,
   AppPort,
@@ -169,7 +169,7 @@ async function checkAllApps(): Promise<void> {
 }
 
 // Check status of a single app
-async function checkAppStatus(app: ReplitApp): Promise<void> {
+async function checkAppStatus(app: WebApp): Promise<void> {
   const previousStatus = app.status;
   let newStatus: string;
   let details = "";
@@ -224,7 +224,7 @@ async function checkAppStatus(app: ReplitApp): Promise<void> {
 }
 
 // Check HTTP status
-async function checkHttpStatus(app: ReplitApp): Promise<string> {
+async function checkHttpStatus(app: WebApp): Promise<string> {
   try {
     // Format URL (if it doesn't include http:// or https://)
     let url = app.appUrl;
@@ -275,7 +275,7 @@ async function checkHttpStatus(app: ReplitApp): Promise<string> {
 }
 
 // Check port status
-async function checkPortStatus(app: ReplitApp): Promise<string> {
+async function checkPortStatus(app: WebApp): Promise<string> {
   return new Promise((resolve) => {
     // Extract domain from URL
     let domain = app.appUrl;
@@ -335,7 +335,7 @@ async function checkAllEndpoints(): Promise<void> {
 }
 
 // Check status of a single endpoint
-async function checkEndpointStatus(endpoint: Endpoint, app: ReplitApp): Promise<void> {
+async function checkEndpointStatus(endpoint: Endpoint, app: WebApp): Promise<void> {
   const previousStatus = endpoint.status;
   let newStatus: EndpointStatus;
   let details = "";
@@ -384,7 +384,7 @@ async function checkEndpointStatus(endpoint: Endpoint, app: ReplitApp): Promise<
 }
 
 // Check endpoint availability
-async function checkEndpointAvailability(endpoint: Endpoint, app: ReplitApp): Promise<EndpointStatus> {
+async function checkEndpointAvailability(endpoint: Endpoint, app: WebApp): Promise<EndpointStatus> {
   try {
     // Format base URL
     let baseUrl = app.appUrl;
@@ -470,7 +470,7 @@ async function checkAllPorts(): Promise<void> {
 }
 
 // Check availability of a single port
-async function checkPortAvailability(port: AppPort, app: ReplitApp): Promise<void> {
+async function checkPortAvailability(port: AppPort, app: WebApp): Promise<void> {
   const previousStatus = port.status;
   let newStatus: string;
   let details = "";
@@ -609,7 +609,7 @@ async function checkAllProcesses(): Promise<void> {
 }
 
 // Check processes for a single app
-async function checkAppProcesses(app: ReplitApp): Promise<void> {
+async function checkAppProcesses(app: WebApp): Promise<void> {
   try {
     const processes = await storage.getProcesses(app.id);
     
@@ -625,7 +625,7 @@ async function checkAppProcesses(app: ReplitApp): Promise<void> {
 }
 
 // Check status of a single process
-async function checkProcessStatus(process: AppProcess, app: ReplitApp): Promise<void> {
+async function checkProcessStatus(process: AppProcess, app: WebApp): Promise<void> {
   const previousStatus = process.status;
   let newStatus: string;
   let details = "";

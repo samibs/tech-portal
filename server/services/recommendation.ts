@@ -1,4 +1,4 @@
-import { ReplitApp, AppStatus, LogEntry } from "@shared/schema";
+import { WebApp, AppStatus, LogEntry } from "@shared/schema";
 import { storage } from "../storage";
 
 // Constants for recommendation logic
@@ -259,7 +259,7 @@ export async function getAppRestartRecommendation(appId: number): Promise<Restar
 /**
  * Analyze an app and provide restart recommendation
  */
-async function analyzeApp(app: ReplitApp): Promise<RestartRecommendation | null> {
+async function analyzeApp(app: WebApp): Promise<RestartRecommendation | null> {
   try {
     const logs = await storage.getLogs(app.id);
     if (!logs || logs.length === 0) return null;
@@ -439,7 +439,7 @@ async function analyzeApp(app: ReplitApp): Promise<RestartRecommendation | null>
 /**
  * Calculate health metrics for an app
  */
-async function calculateAppHealthMetrics(app: ReplitApp, logs: LogEntry[]): Promise<AppHealthMetrics> {
+async function calculateAppHealthMetrics(app: WebApp, logs: LogEntry[]): Promise<AppHealthMetrics> {
   // Only process logs from the last week to focus on recent patterns
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - MAX_PATTERN_HISTORY_DAYS);
@@ -801,8 +801,8 @@ function calculateUptimeErrorCorrelation(uptimePeriods: number[], errorLogs: Log
  * Predict failure probability for a specific time slot
  */
 function predictFailureForTimeSlot(
-  app: ReplitApp, 
-  healthMetrics: AppHealthMetrics, 
+  app: WebApp,
+  healthMetrics: AppHealthMetrics,
   timeSlot: Date, 
   logs: LogEntry[]
 ): {
@@ -1026,7 +1026,7 @@ function identifyHighRiskPeriods(predictionTimeSlots: FailurePredictionTimeSlot[
  * Generate recommended actions to mitigate predicted failures
  */
 function generateRecommendedActions(
-  app: ReplitApp,
+  app: WebApp,
   healthMetrics: AppHealthMetrics,
   predictionTimeSlots: FailurePredictionTimeSlot[],
   aggregatedFailureProbability: number
@@ -1109,7 +1109,7 @@ function formatTime(date: Date): string {
 /**
  * Calculate recommendation score based on app health metrics
  */
-function calculateRecommendationScore(app: ReplitApp, metrics: AppHealthMetrics): number {
+function calculateRecommendationScore(app: WebApp, metrics: AppHealthMetrics): number {
   let score = 0;
   
   // === BASIC FACTORS ===
@@ -1196,7 +1196,7 @@ function calculateRecommendationScore(app: ReplitApp, metrics: AppHealthMetrics)
 /**
  * Determine reason for restart recommendation
  */
-function determineRestartReason(app: ReplitApp, metrics: AppHealthMetrics, score: number): string {
+function determineRestartReason(app: WebApp, metrics: AppHealthMetrics, score: number): string {
   // Get current time to contextualize recommendations
   const now = new Date();
   const currentHour = now.getHours();

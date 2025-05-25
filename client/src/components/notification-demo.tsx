@@ -16,7 +16,7 @@ import {
   generateRestartRecommendationNotification,
   generateSystemNotification
 } from "@/services/notification-service";
-import { ReplitApp } from "@shared/schema";
+import { WebApp, AppStatus } from "@shared/schema";
 import { AppPredictionModel } from "@/lib/api";
 
 /**
@@ -28,13 +28,13 @@ export default function NotificationDemo() {
   const [activeTab, setActiveTab] = useState("status");
   
   // Demo app for status notifications
-  const demoApp: ReplitApp = {
+  const demoApp: WebApp = {
     id: 999,
     name: "Demo Application",
-    appUrl: "https://demo.replit.app",
+    appUrl: "https://demo.sample.app",
     port: 3000,
     type: "Frontend",
-    status: "Stopped",
+    status: AppStatus.STOPPED,
     startCommand: "npm start",
     createdAt: new Date(),
     lastChecked: new Date(),
@@ -70,11 +70,11 @@ export default function NotificationDemo() {
     ]
   };
   
-  const sendStatusNotification = (newStatus: string) => {
+  const sendStatusNotification = (newStatus: AppStatus) => {
     const notification = generateStatusChangeNotification(
       demoApp,
-      demoApp.status,
-      newStatus as any // Type assertion to bypass the enum issue
+      demoApp.status as AppStatus,
+      newStatus
     );
     
     if (notification) {
@@ -154,16 +154,16 @@ export default function NotificationDemo() {
               Generate notifications when an application changes status
             </p>
             <div className="grid grid-cols-2 gap-2">
-              <Button onClick={() => sendStatusNotification("Running")} size="sm" variant="default">
+              <Button onClick={() => sendStatusNotification(AppStatus.RUNNING)} size="sm" variant="default">
                 App Started
               </Button>
-              <Button onClick={() => sendStatusNotification("Stopped")} size="sm" variant="outline">
+              <Button onClick={() => sendStatusNotification(AppStatus.STOPPED)} size="sm" variant="outline">
                 App Stopped
               </Button>
-              <Button onClick={() => sendStatusNotification("Unreachable")} size="sm" variant="outline">
+              <Button onClick={() => sendStatusNotification(AppStatus.UNREACHABLE)} size="sm" variant="outline">
                 App Unreachable
               </Button>
-              <Button onClick={() => sendStatusNotification("Error")} size="sm" variant="destructive">
+              <Button onClick={() => sendStatusNotification(AppStatus.ERROR)} size="sm" variant="destructive">
                 App Error
               </Button>
             </div>
