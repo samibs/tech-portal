@@ -1,15 +1,11 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { z } from "zod";
 import { storage } from "./storage";
 import { 
   insertAppSchema, 
   updateSettingsSchema, 
   AppStatus,
-  insertEndpointSchema,
-  insertAppPortSchema,
-  insertAppProcessSchema,
-  EndpointStatus
+  insertEndpointSchema
 } from "@shared/schema";
 import { startMonitoring, stopMonitoring, updateCheckFrequency } from "./services/monitor";
 import { startApp, stopApp, restartApp, terminateGhostProcesses } from "./services/controller";
@@ -47,7 +43,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return next();
     }
     // Apply authentication to all other API routes
-    return authenticateToken(req as any, res, next);
+    return authenticateToken(req as AuthenticatedRequest, res, next);
   });
 
   // Add process monitoring routes

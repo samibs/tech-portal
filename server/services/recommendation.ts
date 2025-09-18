@@ -752,7 +752,7 @@ function calculateUptimeErrorCorrelation(uptimePeriods: number[], errorLogs: Log
   let runningUptime = 0;
   
   for (const log of errorLogs) {
-    const timestamp = new Date(log.timestamp).getTime();
+    const _timestamp = new Date(log.timestamp).getTime();
     
     // Estimate which uptime period this error belongs to
     // (This is a simplification - a real implementation would track session IDs)
@@ -804,7 +804,7 @@ function predictFailureForTimeSlot(
   app: WebApp,
   healthMetrics: AppHealthMetrics,
   timeSlot: Date, 
-  logs: LogEntry[]
+  _logs: LogEntry[]
 ): {
   failureProbability: number;
   confidenceScore: number;

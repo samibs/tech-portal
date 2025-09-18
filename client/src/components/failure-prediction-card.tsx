@@ -5,9 +5,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { getAppPrediction, AppPredictionModel } from "@/lib/api";
+import { getAppPrediction } from "@/lib/api";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useState } from "react";
 import { Link } from "wouter";
 import { ArrowLeftIcon } from "lucide-react";
 
@@ -16,8 +15,6 @@ interface FailurePredictionCardProps {
 }
 
 export default function FailurePredictionCard({ appId }: FailurePredictionCardProps) {
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  
   const { data: prediction, isLoading, isError } = useQuery({
     queryKey: [`/api/apps/${appId}/prediction`],
     queryFn: () => getAppPrediction(appId),

@@ -3,10 +3,10 @@ import { useParams, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; 
 import { getAppLogs, getApp } from "@/lib/api";
 import { ArrowLeftIcon, RefreshCwIcon, AlertTriangleIcon } from "lucide-react";
+import { LogEntry } from "@shared/schema";
 import { format } from "date-fns";
 
 export default function AppLogsPage() {
@@ -133,7 +133,7 @@ export default function AppLogsPage() {
             </div>
           ) : (
             <div className="space-y-4 divide-y divide-gray-200 dark:divide-gray-700">
-              {logs.map((log: any) => (
+              {logs.map((log: LogEntry) => (
                 <div key={log.id} className="pt-4 first:pt-0">
                   <div className="flex justify-between items-start">
                     <div>

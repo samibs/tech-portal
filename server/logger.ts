@@ -18,7 +18,7 @@ if (!fs.existsSync(logDirectory)) {
 const logFile = path.join(logDirectory, 'app.log');
 
 const logger = {
-  log: (level: 'info' | 'warn' | 'error', message: string, ...args: any[]) => {
+  log: (level: 'info' | 'warn' | 'error', message: string, ...args: unknown[]) => {
     const timestamp = new Date().toISOString();
     const logMessage = `${timestamp} [${level.toUpperCase()}] ${message} ${args.length ? JSON.stringify(args) : ''}`;
 
@@ -30,13 +30,13 @@ const logger = {
       }
     });
   },
-  info: (message: string, ...args: any[]) => {
+  info: (message: string, ...args: unknown[]) => {
     logger.log('info', message, ...args);
   },
-  warn: (message: string, ...args: any[]) => {
+  warn: (message: string, ...args: unknown[]) => {
     logger.log('warn', message, ...args);
   },
-  error: (message: string, ...args: any[]) => {
+  error: (message: string, ...args: unknown[]) => {
     logger.log('error', message, ...args);
   },
 };
