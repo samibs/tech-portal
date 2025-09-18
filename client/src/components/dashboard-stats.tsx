@@ -2,7 +2,6 @@ import {
   Layers, 
   CheckCircle, 
   XCircle, 
-  AlertCircle, 
   Clock 
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";

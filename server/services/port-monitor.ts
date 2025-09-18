@@ -1,10 +1,53 @@
 import { EventEmitter } from 'events';
 import { findProcessByPort, ProcessInfo } from './port-manager';
 import logger from '../logger';
+import { broadcast } from '../websocket';
+import { promises as fs } from 'fs';
+import path from 'path';
 
-// A list of ports to monitor by default. This can be changed.
-const DEFAULT_PORTS_TO_MONITOR = [3000, 3001, 8000, 8080, 5000];
+const MONITORED_PORTS_FILE = path.join(__dirname, '../../data/monitored-ports.json');
+const PORT_EVENTS_FILE = path.join(__dirname, '../../data/port-events.json');
+
 const DEFAULT_MONITOR_INTERVAL_MS = 5000; // 5 seconds
+
+interface PortEvent {
+  timestamp: string;
+  type: 'process-detected' | 'process-gone';
+  port: number;
+  processInfo: ProcessInfo;
+}
+
+async function logPortEvent(event: Omit<PortEvent, 'timestamp'>) {
+  try {
+    const data = await fs.readFile(PORT_EVENTS_FILE, 'utf-8');
+    const events: PortEvent[] = JSON.parse(data);
+    events.unshift({ ...event, timestamp: new Date().toISOString() });
+    // Keep only the last 100 events
+    const truncatedEvents = events.slice(0, 100);
+    await fs.writeFile(PORT_EVENTS_FILE, JSON.stringify(truncatedEvents, null, 2), 'utf-8');
+  } catch (error) {
+    logger.error('Error logging port event.', error);
+  }
+}
+
+async function getMonitoredPortsFromFile(): Promise<number[]> {
+  try {
+    const data = await fs.readFile(MONITORED_PORTS_FILE, 'utf-8');
+    const json = JSON.parse(data);
+    return json.ports || [];
+  } catch (error) {
+    logger.error('Error reading monitored ports file, returning empty array.', error);
+    return [];
+  }
+}
+
+async function writeMonitoredPortsToFile(ports: number[]): Promise<void> {
+  try {
+    await fs.writeFile(MONITORED_PORTS_FILE, JSON.stringify({ ports }, null, 2), 'utf-8');
+  } catch (error) {
+    logger.error('Error writing monitored ports file.', error);
+  }
+}
 
 export class PortMonitor extends EventEmitter {
   private portsToMonitor: number[];
@@ -12,27 +55,30 @@ export class PortMonitor extends EventEmitter {
   private intervalMs: number;
   private knownProcesses: Map<number, ProcessInfo> = new Map(); // port -> ProcessInfo
 
-  constructor(
-    ports: number[] = DEFAULT_PORTS_TO_MONITOR,
-    intervalMs: number = DEFAULT_MONITOR_INTERVAL_MS
-  ) {
+  constructor(intervalMs: number = DEFAULT_MONITOR_INTERVAL_MS) {
     super();
-    this.portsToMonitor = ports;
+    this.portsToMonitor = [];
     this.intervalMs = intervalMs;
   }
 
-  public start(): void {
+  private async loadPorts() {
+    this.portsToMonitor = await getMonitoredPortsFromFile();
+  }
+
+  public async start(): Promise<void> {
     if (this.monitoringInterval) {
       logger.warn('Monitoring is already active.');
       return;
     }
 
+    await this.loadPorts();
     logger.info(`Starting port monitoring for ports: [${this.portsToMonitor.join(', ')}]`);
 
     // Initial check
     this.checkPorts();
 
-    this.monitoringInterval = setInterval(() => {
+    this.monitoringInterval = setInterval(async () => {
+      await this.loadPorts(); // Reload ports on each interval
       this.checkPorts();
     }, this.intervalMs);
 
@@ -48,6 +94,23 @@ export class PortMonitor extends EventEmitter {
     }
   }
 
+  public async addPort(port: number): Promise<void> {
+    if (!this.portsToMonitor.includes(port)) {
+      this.portsToMonitor.push(port);
+      await writeMonitoredPortsToFile(this.portsToMonitor);
+      logger.info(`Added port ${port} to monitoring list.`);
+    }
+  }
+
+  public async removePort(port: number): Promise<void> {
+    const index = this.portsToMonitor.indexOf(port);
+    if (index > -1) {
+      this.portsToMonitor.splice(index, 1);
+      await writeMonitoredPortsToFile(this.portsToMonitor);
+      logger.info(`Removed port ${port} from monitoring list.`);
+    }
+  }
+
   private async checkPorts(): Promise<void> {
     logger.info('Checking monitored ports for processes...');
     for (const port of this.portsToMonitor) {
@@ -60,14 +123,20 @@ export class PortMonitor extends EventEmitter {
           if (!previouslyKnownProcess || previouslyKnownProcess.pid !== processInfo.pid) {
             // New process detected
             this.knownProcesses.set(port, processInfo);
+            const event = { type: 'process-detected', port, processInfo };
             logger.info(`New process detected on port ${port}: ${processInfo.name} (PID: ${processInfo.pid})`);
-            this.emit('process-detected', { port, processInfo });
+            this.emit('process-detected', event);
+            logPortEvent(event);
+            broadcast(event);
           }
         } else if (previouslyKnownProcess) {
           // Process was there, but now it's gone
+          const event = { type: 'process-gone', port, processInfo: previouslyKnownProcess };
           logger.info(`Process on port ${port} (PID: ${previouslyKnownProcess.pid}) is no longer running.`);
           this.knownProcesses.delete(port);
-          this.emit('process-gone', { port, processInfo: previouslyKnownProcess });
+          this.emit('process-gone', event);
+          logPortEvent(event);
+          broadcast(event);
         }
       } catch (error) {
         logger.error(`Error checking port ${port}:`, error);
@@ -75,7 +144,7 @@ export class PortMonitor extends EventEmitter {
     }
   }
 
-  public getMonitoredPorts(): number[] {
+  public getPorts(): number[] {
     return this.portsToMonitor;
   }
 

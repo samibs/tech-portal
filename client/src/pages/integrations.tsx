@@ -20,7 +20,7 @@ export default function IntegrationsPage() {
   const [testEmailAddress, setTestEmailAddress] = useState('');
   
   // Fetch settings
-  const { data: settings, isLoading, refetch } = useQuery({
+  const { data: settings, refetch } = useQuery({
     queryKey: ['/api/settings'],
     queryFn: () => getSettings(),
   });

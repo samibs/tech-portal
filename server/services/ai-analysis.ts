@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { WebApp, AppStatus, LogEntry } from "@shared/schema";
+import { WebApp, LogEntry } from "@shared/schema";
 import { RestartRecommendation } from "./recommendation";
 
 // Initialize Anthropic client
@@ -17,7 +17,7 @@ const MODEL = 'claude-3-7-sonnet-20250219';
 export async function analyzeAppWithAI(
   app: WebApp,
   logs: LogEntry[],
-  metrics: any, 
+  metrics: SystemMetrics,
   existingRecommendation?: RestartRecommendation
 ): Promise<{
   aiInsights: string[];
@@ -140,6 +140,18 @@ Keep insights concise (15-25 words each) and focused on technical root cause ana
       aiInsights: ["AI analysis failed - service temporarily unavailable"],
     };
   }
+}
+
+interface SystemMetrics {
+  failureRate: number;
+  averageUptime: number;
+  errorOccurrences: number;
+  statusTransitions: number;
+  errorFrequencyTrend: number;
+  memoryLeakLikelihood: number;
+  performanceDegradation: number;
+  uptimeStability: number;
+  errorDensity: number;
 }
 
 /**

@@ -1,6 +1,12 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { setupWebSocketServer } from "./websocket";
+
+interface HttpError extends Error {
+  status?: number;
+  statusCode?: number;
+}
 import { initializeDatabase } from "./db";
 import { generalRateLimit } from "./middleware/rate-limit";
 import healthRoutes from "./routes/health";
@@ -31,7 +37,7 @@ app.use('/api', healthRoutes);
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+  let capturedJsonResponse: Record<string, unknown> | undefined = undefined;
 
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
@@ -70,7 +76,9 @@ app.use((req, res, next) => {
 
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  setupWebSocketServer(server);
+
+  app.use((err: HttpError, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 

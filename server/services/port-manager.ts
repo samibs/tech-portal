@@ -101,24 +101,62 @@ export async function killProcess(pid: number): Promise<boolean> {
   }
 }
 
+export async function findProcessByPid(pid: number): Promise<ProcessInfo | null> {
+  if (!pid || typeof pid !== 'number' || pid <= 0) {
+    throw new Error('Invalid PID provided.');
+  }
+
+  const platform = process.platform;
+  let command: string;
+
+  if (platform === 'win32') {
+    command = `tasklist /fi "pid eq ${pid}" /nh /fo csv`;
+  } else {
+    command = `ps -p ${pid} -o comm=`;
+  }
+
+  try {
+    const { stdout } = await execAsync(command);
+    if (!stdout.trim()) {
+      return null;
+    }
+
+    let name = null;
+    if (platform === 'win32') {
+        const match = stdout.match(/"(.*?)"/);
+        if (match) {
+            name = match[1];
+        }
+    } else {
+        name = stdout.trim();
+    }
+
+    return { pid, name };
+  } catch (error) {
+    logger.warn(`No process found with PID ${pid}.`);
+    return null;
+  }
+}
+
 /**
  * Finds and kills the process running on a specific port.
  *
  * @param port The port number of the process to kill.
- * @returns A promise that resolves to true if the process was killed successfully, false otherwise.
+ * @returns A promise that resolves with the process info of the killed process, or null if no process was killed.
  */
-export async function killProcessByPort(port: number): Promise<boolean> {
+export async function killProcessByPort(port: number): Promise<ProcessInfo | null> {
   try {
     const processInfo = await findProcessByPort(port);
     if (processInfo && processInfo.pid) {
       logger.info(`Found process ${processInfo.name} (PID: ${processInfo.pid}) on port ${port}.`);
-      return await killProcess(processInfo.pid);
+      const success = await killProcess(processInfo.pid);
+      return success ? processInfo : null;
     } else {
       logger.warn(`No process to kill on port ${port}.`);
-      return false;
+      return null;
     }
   } catch (error) {
     logger.error(`Error killing process on port ${port}:`, error);
-    return false;
+    return null;
   }
 }

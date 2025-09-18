@@ -1,5 +1,6 @@
 import { apiRequest } from "@/lib/queryClient";
-import { InsertApp, UpdateSettings } from "@shared/schema";
+import { InsertApp, UpdateSettings, insertEndpointSchema, updateEndpointSchema } from "@shared/schema";
+import { z } from "zod";
 
 // App API
 export async function getApps() {
@@ -20,7 +21,7 @@ export async function createApp(app: InsertApp) {
   return res.json();
 }
 
-export async function updateApp(id: number, updates: Partial<any>) {
+export async function updateApp(id: number, updates: Partial<InsertApp>) {
   const res = await apiRequest(`/api/apps/${id}`, {
     method: "PATCH", 
     data: updates
@@ -115,7 +116,7 @@ export async function getRestartRecommendations() {
   const data = await res.json();
   
   // Convert string dates to Date objects
-  return data.map((recommendation: any) => ({
+  return data.map((recommendation: RestartRecommendation) => ({
     ...recommendation,
     lastRestarted: recommendation.lastRestarted ? new Date(recommendation.lastRestarted) : null
   }));
@@ -164,18 +165,18 @@ export interface AppPredictionModel {
 
 export async function getAllPredictions() {
   const res = await apiRequest("/api/predictions");
-  const data = await res.json();
+  const data: AppPredictionModel[] = await res.json();
   
   // Convert string dates to Date objects
-  return data.map((prediction: any) => ({
+  return data.map((prediction) => ({
     ...prediction,
     predictionGenerated: new Date(prediction.predictionGenerated),
-    predictionTimeSlots: prediction.predictionTimeSlots.map((slot: any) => ({
+    predictionTimeSlots: prediction.predictionTimeSlots.map((slot) => ({
       ...slot,
       startTime: new Date(slot.startTime),
       endTime: new Date(slot.endTime)
     })),
-    highRiskPeriods: prediction.highRiskPeriods.map((period: any) => ({
+    highRiskPeriods: prediction.highRiskPeriods.map((period) => ({
       ...period,
       startTime: new Date(period.startTime),
       endTime: new Date(period.endTime)
@@ -188,17 +189,18 @@ export async function getAppPrediction(id: number) {
   const prediction = await res.json();
   
   // Convert string dates to Date objects
+  const typedPrediction = prediction as AppPredictionModel;
   return {
-    ...prediction,
-    predictionGenerated: prediction.predictionGenerated ? new Date(prediction.predictionGenerated) : null,
-    predictionTimeSlots: prediction.predictionTimeSlots ? 
-      prediction.predictionTimeSlots.map((slot: any) => ({
+    ...typedPrediction,
+    predictionGenerated: typedPrediction.predictionGenerated ? new Date(typedPrediction.predictionGenerated) : null,
+    predictionTimeSlots: typedPrediction.predictionTimeSlots ?
+      typedPrediction.predictionTimeSlots.map((slot) => ({
         ...slot,
         startTime: new Date(slot.startTime),
         endTime: new Date(slot.endTime)
       })) : [],
-    highRiskPeriods: prediction.highRiskPeriods ? 
-      prediction.highRiskPeriods.map((period: any) => ({
+    highRiskPeriods: typedPrediction.highRiskPeriods ?
+      typedPrediction.highRiskPeriods.map((period) => ({
         ...period,
         startTime: new Date(period.startTime),
         endTime: new Date(period.endTime)
@@ -222,7 +224,7 @@ export async function getEndpoint(id: number) {
   return res.json();
 }
 
-export async function createEndpoint(endpoint: any) {
+export async function createEndpoint(endpoint: z.infer<typeof insertEndpointSchema>) {
   const res = await apiRequest("/api/endpoints", {
     method: "POST",
     data: endpoint
@@ -230,7 +232,7 @@ export async function createEndpoint(endpoint: any) {
   return res.json();
 }
 
-export async function updateEndpoint(id: number, updates: any) {
+export async function updateEndpoint(id: number, updates: z.infer<typeof updateEndpointSchema>) {
   const res = await apiRequest(`/api/endpoints/${id}`, {
     method: "PATCH",
     data: updates
@@ -261,7 +263,39 @@ export async function checkPortAvailability(port: number) {
   return res.json();
 }
 
+export async function getMonitoredPorts() {
+    const res = await apiRequest('/api/monitoring/ports');
+    return res.json();
+}
+
+export async function addMonitoredPort(port: number) {
+    const res = await apiRequest('/api/monitoring/ports', {
+        method: 'POST',
+        data: { port },
+    });
+    return res.json();
+}
+
+export async function removeMonitoredPort(port: number) {
+    const res = await apiRequest(`/api/monitoring/ports/${port}`, {
+        method: 'DELETE',
+    });
+    return res.json();
+}
+
 // Processes API
+export async function findProcessByPort(port: number) {
+  const res = await apiRequest(`/api/ports/${port}/process`);
+  return res.json();
+}
+
+export async function killProcessByPort(port: number) {
+  const res = await apiRequest(`/api/ports/${port}/process`, {
+    method: 'DELETE',
+  });
+  return res.json();
+}
+
 export async function getProcesses() {
   const res = await apiRequest("/api/processes");
   return res.json();
