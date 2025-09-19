@@ -15,7 +15,7 @@ import { EndpointStatus } from "@shared/schema";
 import { toast } from "@/hooks/use-toast";
 import { AlertTriangle, CheckCircle, Clock, RefreshCw, Trash2, Edit, PlusCircle, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
-import type { Endpoint, WebApp } from "@shared/schema";
+import type { Endpoint } from "@shared/schema";
 
 function EndpointStatusBadge({ status }: { status: EndpointStatus }) {
   switch (status) {
@@ -70,9 +70,8 @@ function AddEndpointDialog({ appId }: { appId?: number }) {
     description: "",
   });
 
-  const { data: apps = [] } = useQuery<WebApp[]>({
+  const { data: apps = [] } = useQuery<any[]>({
     queryKey: ["/api/apps"],
-    queryFn: () => apiRequest("/api/apps").then(res => res.json()),
     enabled: !appId,
   });
 
@@ -133,7 +132,7 @@ function AddEndpointDialog({ appId }: { appId?: number }) {
                     <SelectValue placeholder="Select application" />
                   </SelectTrigger>
                   <SelectContent>
-                    {apps?.map((app) => (
+                    {apps?.map((app: any) => (
                       <SelectItem key={app.id} value={app.id.toString()}>
                         {app.name}
                       </SelectItem>
@@ -309,7 +308,7 @@ export default function EndpointsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {endpoints.map((endpoint) => (
+                  {endpoints.map((endpoint: any) => (
                     <TableRow key={endpoint.id}>
                       <TableCell className="font-medium">{endpoint.appName}</TableCell>
                       <TableCell>

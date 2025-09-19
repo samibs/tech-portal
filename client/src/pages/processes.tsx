@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -52,7 +52,7 @@ export default function ProcessesPage() {
   const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
 
-  const fetchData = useCallback(async (showRefreshing = false) => {
+  const fetchData = async (showRefreshing = false) => {
     if (showRefreshing) setRefreshing(true);
     try {
       const [processesRes, portsRes, ghostRes, resourcesRes, usageRes] = await Promise.all([
@@ -98,7 +98,7 @@ export default function ProcessesPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [toast]);
+  };
 
   const killProcess = async (pid: number) => {
     try {
@@ -162,7 +162,7 @@ export default function ProcessesPage() {
     fetchData();
     const interval = setInterval(() => fetchData(true), 10000); // Refresh every 10 seconds
     return () => clearInterval(interval);
-  }, [fetchData]);
+  }, []);
 
   const getStatusBadge = (status: string) => {
     const variants = {

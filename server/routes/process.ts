@@ -1,15 +1,16 @@
 import { Router } from 'express';
-import * as portManager from '../services/port-manager';
-import { portMonitor } from '../services/port-monitor';
-import { requireAuth } from '../middleware/auth';
-import logger from '../logger';
+import * as portManager from '../services/port-manager.js';
+import { portMonitor } from '../services/port-monitor.js';
+import { requireAuth } from '../middleware/auth.js';
+import logger from '../logger.js';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = Router();
-
-// Apply authentication to all routes
-router.use(requireAuth);
 
 // Find a process by port
 router.get('/ports/:port/process', async (req, res) => {
@@ -64,7 +65,7 @@ router.delete('/ports/:port/process', async (req, res) => {
     }
     const killedProcess = await portManager.killProcessByPort(port);
     if (killedProcess) {
-      res.json({ success: true, message: `Process ${killedProcess.name} (PID: ${killedProcess.pid}) on port ${port} killed`, killedProcess });
+      res.json({ success: true, message: `Process on port ${port} killed`, killedProcess });
     } else {
       res.status(404).json({ error: 'No process found to kill on this port' });
     }
@@ -97,12 +98,12 @@ router.post('/monitoring/stop', (req, res) => {
 });
 
 // Get monitoring status
-router.get('/monitoring/status', (req, res) => {
+router.get('/monitoring/status', async (req, res) => {
   try {
     const knownProcesses = Object.fromEntries(portMonitor.getKnownProcesses());
     res.json({
       isMonitoring: !!portMonitor['monitoringInterval'],
-      monitoredPorts: portMonitor.getPorts(),
+      monitoredPorts: await portMonitor.getMonitoredPorts(),
       knownProcesses,
     });
   } catch (error) {
@@ -112,9 +113,9 @@ router.get('/monitoring/status', (req, res) => {
 });
 
 // Get monitored ports
-router.get('/monitoring/ports', (req, res) => {
+router.get('/monitoring/ports', async (req, res) => {
   try {
-    const ports = portMonitor.getPorts();
+    const ports = await portMonitor.getMonitoredPorts();
     res.json({ ports });
   } catch (error) {
     logger.error('Error getting monitored ports:', error);
@@ -156,7 +157,14 @@ router.delete('/monitoring/ports/:port', async (req, res) => {
 router.get('/monitoring/events', async (req, res) => {
     try {
         const PORT_EVENTS_FILE = path.join(__dirname, '../../data/port-events.json');
-        const data = await fs.readFile(PORT_EVENTS_FILE, 'utf-8');
+        let data = "[]";
+        try {
+            data = await fs.readFile(PORT_EVENTS_FILE, 'utf-8');
+        } catch (error) {
+            if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+                throw error;
+            }
+        }
         const events = JSON.parse(data);
         res.json(events);
     } catch (error) {

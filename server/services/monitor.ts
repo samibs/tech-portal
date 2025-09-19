@@ -3,6 +3,7 @@ import net from "net";
 import { storage } from "../storage";
 import {
   WebApp,
+  AppStatus,
   Endpoint, 
   EndpointStatus,
   AppPort,
@@ -319,6 +320,7 @@ async function checkPortStatus(app: WebApp): Promise<string> {
 async function checkAllEndpoints(): Promise<void> {
   try {
     const endpoints = await storage.getEndpoints();
+    const settings = await storage.getSettings();
     
     for (const endpoint of endpoints) {
       // Skip endpoints for apps that are not running
