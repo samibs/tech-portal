@@ -1,6 +1,6 @@
-import { ChildProcess } from "child_process";
+import { spawn, ChildProcess } from "child_process";
 import { storage } from "../storage";
-import { WebApp } from "@shared/schema";
+import { WebApp, AppStatus, AppProcess } from "@shared/schema";
 
 interface AppControlResult {
   success: boolean;

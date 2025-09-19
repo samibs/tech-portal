@@ -2,11 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-/**
- * A simple logger that writes to the console and a log file.
- * The log file is created in the `logs` directory.
- */
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const logDirectory = path.join(__dirname, '..', 'logs');

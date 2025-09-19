@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 interface User {
   id: number;
@@ -59,21 +59,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
     
     setIsLoading(false);
-  }, [logout]);
+  }, []);
 
   const verifyToken = async (authToken: string) => {
-    const response = await fetch("/api/auth/me", {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
-    });
+    try {
+      const response = await fetch("/api/auth/me", {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error("Token verification failed");
+      if (!response.ok) {
+        throw new Error("Token verification failed");
+      }
+
+      const userData = await response.json();
+      setUser(userData);
+    } catch (error) {
+      throw error;
     }
-
-    const userData = await response.json();
-    setUser(userData);
   };
 
   const login = (authToken: string, userData: User) => {
@@ -83,25 +87,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     localStorage.setItem("user", JSON.stringify(userData));
   };
 
-  const logout = useCallback(() => {
-    const currentToken = localStorage.getItem("auth_token");
+  const logout = () => {
     setToken(null);
     setUser(null);
     localStorage.removeItem("auth_token");
     localStorage.removeItem("user");
     
     // Call logout endpoint for audit logging
-    if (currentToken) {
+    if (token) {
       fetch("/api/auth/logout", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${currentToken}`,
+          Authorization: `Bearer ${token}`,
         },
       }).catch(() => {
         // Ignore errors on logout
       });
     }
-  }, []);
+  };
 
   const value: AuthContextType = {
     user,

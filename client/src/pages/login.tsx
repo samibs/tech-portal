@@ -6,14 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Shield } from "lucide-react";
 
-interface User {
-  id: number;
-  username: string;
-  role: string;
-}
-
 interface LoginPageProps {
-  onLogin: (token: string, user: User) => void;
+  onLogin: (token: string, user: any) => void;
 }
 
 export default function LoginPage({ onLogin }: LoginPageProps) {
