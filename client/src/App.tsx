@@ -12,7 +12,6 @@ import Endpoints from "@/pages/endpoints";
 import Integrations from "@/pages/integrations";
 import AppLogs from "@/pages/app-logs";
 import ProcessesPage from "@/pages/processes";
-import PortManagementPage from "@/pages/port-management";
 import LoginPage from "@/pages/login";
 import { ThemeProvider } from "next-themes";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -39,7 +38,6 @@ function Router() {
       <Route path="/endpoints/:appId" component={Endpoints} />
       <Route path="/logs/:appId" component={AppLogs} />
       <Route path="/processes" component={ProcessesPage} />
-      <Route path="/port-management" component={PortManagementPage} />
       <Route component={NotFound} />
     </Switch>
   );

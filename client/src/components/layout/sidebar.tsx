@@ -1,6 +1,8 @@
 import { Link } from "wouter";
+import { useState, useEffect } from "react";
 import { BarChart2, Bell, Settings, HelpCircle, Zap, ChevronDown, TrendingUp, Globe, Mail, Activity } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 interface SidebarProps {
@@ -41,12 +43,6 @@ export default function Sidebar({ mobileMenuOpen, closeMobileMenu }: SidebarProp
             <div className="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-primary-600 hover:text-white cursor-pointer">
               <Activity className="mr-3 h-5 w-5 text-gray-400" />
               Processes
-            </div>
-          </Link>
-          <Link href="/port-management">
-            <div className="flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-primary-600 hover:text-white cursor-pointer">
-              <Zap className="mr-3 h-5 w-5 text-gray-400" />
-              Port Management
             </div>
           </Link>
           <Link href="/notifications">

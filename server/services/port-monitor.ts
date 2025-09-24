@@ -1,9 +1,13 @@
 import { EventEmitter } from 'events';
-import { findProcessByPort, ProcessInfo } from './port-manager';
-import logger from '../logger';
-import { broadcast } from '../websocket';
+import { findProcessByPort, ProcessInfo } from './port-manager.js';
+import logger from '../logger.js';
+import { broadcast } from '../websocket.js';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const MONITORED_PORTS_FILE = path.join(__dirname, '../../data/monitored-ports.json');
 const PORT_EVENTS_FILE = path.join(__dirname, '../../data/port-events.json');
@@ -19,8 +23,13 @@ interface PortEvent {
 
 async function logPortEvent(event: Omit<PortEvent, 'timestamp'>) {
   try {
-    const data = await fs.readFile(PORT_EVENTS_FILE, 'utf-8');
-    const events: PortEvent[] = JSON.parse(data);
+    let events: PortEvent[] = [];
+    try {
+      const data = await fs.readFile(PORT_EVENTS_FILE, 'utf-8');
+      events = JSON.parse(data);
+    } catch (error) {
+      // File might not exist yet
+    }
     events.unshift({ ...event, timestamp: new Date().toISOString() });
     // Keep only the last 100 events
     const truncatedEvents = events.slice(0, 100);
@@ -36,6 +45,11 @@ async function getMonitoredPortsFromFile(): Promise<number[]> {
     const json = JSON.parse(data);
     return json.ports || [];
   } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      // File doesn't exist, create it with an empty array
+      await writeMonitoredPortsToFile([]);
+      return [];
+    }
     logger.error('Error reading monitored ports file, returning empty array.', error);
     return [];
   }
@@ -95,18 +109,22 @@ export class PortMonitor extends EventEmitter {
   }
 
   public async addPort(port: number): Promise<void> {
-    if (!this.portsToMonitor.includes(port)) {
-      this.portsToMonitor.push(port);
-      await writeMonitoredPortsToFile(this.portsToMonitor);
+    const ports = await getMonitoredPortsFromFile();
+    if (!ports.includes(port)) {
+      ports.push(port);
+      await writeMonitoredPortsToFile(ports);
+      this.portsToMonitor = ports;
       logger.info(`Added port ${port} to monitoring list.`);
     }
   }
 
   public async removePort(port: number): Promise<void> {
-    const index = this.portsToMonitor.indexOf(port);
+    let ports = await getMonitoredPortsFromFile();
+    const index = ports.indexOf(port);
     if (index > -1) {
-      this.portsToMonitor.splice(index, 1);
-      await writeMonitoredPortsToFile(this.portsToMonitor);
+      ports.splice(index, 1);
+      await writeMonitoredPortsToFile(ports);
+      this.portsToMonitor = ports;
       logger.info(`Removed port ${port} from monitoring list.`);
     }
   }
@@ -123,7 +141,7 @@ export class PortMonitor extends EventEmitter {
           if (!previouslyKnownProcess || previouslyKnownProcess.pid !== processInfo.pid) {
             // New process detected
             this.knownProcesses.set(port, processInfo);
-            const event = { type: 'process-detected', port, processInfo };
+            const event = { type: 'process-detected' as const, port, processInfo };
             logger.info(`New process detected on port ${port}: ${processInfo.name} (PID: ${processInfo.pid})`);
             this.emit('process-detected', event);
             logPortEvent(event);
@@ -131,7 +149,7 @@ export class PortMonitor extends EventEmitter {
           }
         } else if (previouslyKnownProcess) {
           // Process was there, but now it's gone
-          const event = { type: 'process-gone', port, processInfo: previouslyKnownProcess };
+          const event = { type: 'process-gone' as const, port, processInfo: previouslyKnownProcess };
           logger.info(`Process on port ${port} (PID: ${previouslyKnownProcess.pid}) is no longer running.`);
           this.knownProcesses.delete(port);
           this.emit('process-gone', event);
@@ -144,8 +162,8 @@ export class PortMonitor extends EventEmitter {
     }
   }
 
-  public getPorts(): number[] {
-    return this.portsToMonitor;
+  public async getMonitoredPorts(): Promise<number[]> {
+    return await getMonitoredPortsFromFile();
   }
 
   public getKnownProcesses(): Map<number, ProcessInfo> {

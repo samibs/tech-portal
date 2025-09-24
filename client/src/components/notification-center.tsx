@@ -10,10 +10,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 export default function NotificationCenter() {
-  const { notifications, markAsRead, clearNotifications, unreadCount } = useNotifications();
+  const { notifications, markAsRead, removeNotification, clearNotifications, unreadCount } = useNotifications();
   const [open, setOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -39,6 +40,33 @@ export default function NotificationCenter() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Format date relative to now
+  const formatRelativeTime = (date: Date) => {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) {
+      return 'just now';
+    }
+
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes}m ago`;
+    }
+
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return `${diffInHours}h ago`;
+    }
+
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) {
+      return `${diffInDays}d ago`;
+    }
+
+    return date.toLocaleDateString();
+  };
 
   return (
     <div ref={popoverRef}>
@@ -87,7 +115,7 @@ export default function NotificationCenter() {
             <div className="flex flex-col items-center justify-center p-6 py-8 text-center text-muted-foreground">
               <Bell className="h-8 w-8 mb-2 opacity-20" />
               <p className="text-sm font-medium">No notifications</p>
-              <p className="text-xs">You&apos;re all caught up!</p>
+              <p className="text-xs">You're all caught up!</p>
             </div>
           ) : (
             <>

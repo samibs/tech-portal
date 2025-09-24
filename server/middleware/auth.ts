@@ -57,7 +57,7 @@ export function generateToken(user: { id: number; username: string; role: string
   );
 }
 
-export function verifyToken(token: string): string | jwt.JwtPayload {
+export function verifyToken(token: string): any {
   const secret = process.env.JWT_SECRET || 'your-secret-key';
   return jwt.verify(token, secret);
 }
@@ -157,7 +157,7 @@ export const authRateLimit = {
 };
 
 // Audit logging for sensitive operations
-export async function auditLog(req: AuthenticatedRequest, action: string, details?: Record<string, unknown>) {
+export async function auditLog(req: AuthenticatedRequest, action: string, details?: any) {
   const logEntry = {
     timestamp: new Date(),
     userId: req.user?.id || null,

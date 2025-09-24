@@ -14,8 +14,6 @@ export interface Notification {
   read: boolean;
 }
 
-type StoredNotification = Omit<Notification, "timestamp"> & { timestamp: string };
-
 interface NotificationContextType {
   notifications: Notification[];
   addNotification: (notification: Omit<Notification, "id" | "timestamp" | "read">) => void;
@@ -39,17 +37,17 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
     try {
       const savedNotifications = localStorage.getItem(STORAGE_KEY);
       if (savedNotifications) {
-        const parsedNotifications: StoredNotification[] = JSON.parse(savedNotifications);
+        const parsedNotifications = JSON.parse(savedNotifications);
         
         // Convert string timestamps back to Date objects
-        const formattedNotifications = parsedNotifications.map((notification) => ({
+        const formattedNotifications = parsedNotifications.map((notification: any) => ({
           ...notification,
           timestamp: new Date(notification.timestamp)
         }));
         
         setNotifications(formattedNotifications);
         
-        const unread = formattedNotifications.filter((n) => !n.read).length;
+        const unread = formattedNotifications.filter((n: Notification) => !n.read).length;
         setUnreadCount(unread);
       }
     } catch (error) {

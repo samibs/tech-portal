@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FailurePredictionCard from "@/components/failure-prediction-card";
-import { getAllPredictions, AppPredictionModel } from "@/lib/api";
+import { getAllPredictions, getAppPrediction, AppPredictionModel } from "@/lib/api";
 import { ArrowRightIcon, AlertCircleIcon, TrendingUpIcon, ClockIcon, AlertTriangleIcon, RefreshCwIcon, ArrowLeftIcon } from "lucide-react";
 import { Link } from "wouter";
 

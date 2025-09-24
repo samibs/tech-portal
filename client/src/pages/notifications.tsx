@@ -258,7 +258,7 @@ export default function NotificationsPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Notification History</CardTitle>
-                    <CardDescription>You don&apos;t have any notifications yet</CardDescription>
+                    <CardDescription>You don't have any notifications yet</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">

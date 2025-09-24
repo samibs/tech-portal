@@ -1,6 +1,11 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import logger from '../logger';
+import logger from '../logger.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const execAsync = promisify(exec);
 
@@ -27,16 +32,17 @@ export async function findProcessByPort(port: number): Promise<ProcessInfo | nul
     command = `netstat -aon | findstr ":${port}" | findstr "LISTENING"`;
   } else if (platform === 'darwin') {
     command = `lsof -i tcp:${port} -sTCP:LISTEN -P -t`;
-  } else if (platform === 'linux') {
-    command = `lsof -i :${port} -sTCP:LISTEN -P -t`;
-  } else {
-    throw new Error(`Unsupported platform: ${platform}`);
+  } else { // linux
+    command = `lsof -i :${port} -sTCP:LISTEN -t -sTCP:LISTEN`;
   }
 
   try {
     const { stdout } = await execAsync(command);
-    let pid: number | undefined;
+    if (!stdout) {
+        return null;
+    }
 
+    let pid: number | undefined;
     if (platform === 'win32') {
       const lines = stdout.trim().split('\n');
       const line = lines[0]; // Get the first line of the output
@@ -48,7 +54,7 @@ export async function findProcessByPort(port: number): Promise<ProcessInfo | nul
         }
       }
     } else {
-        pid = parseInt(stdout.trim(), 10);
+        pid = parseInt(stdout.trim().split('\n')[0], 10);
     }
 
     if (!pid || isNaN(pid)) {
@@ -101,43 +107,6 @@ export async function killProcess(pid: number): Promise<boolean> {
   }
 }
 
-export async function findProcessByPid(pid: number): Promise<ProcessInfo | null> {
-  if (!pid || typeof pid !== 'number' || pid <= 0) {
-    throw new Error('Invalid PID provided.');
-  }
-
-  const platform = process.platform;
-  let command: string;
-
-  if (platform === 'win32') {
-    command = `tasklist /fi "pid eq ${pid}" /nh /fo csv`;
-  } else {
-    command = `ps -p ${pid} -o comm=`;
-  }
-
-  try {
-    const { stdout } = await execAsync(command);
-    if (!stdout.trim()) {
-      return null;
-    }
-
-    let name = null;
-    if (platform === 'win32') {
-        const match = stdout.match(/"(.*?)"/);
-        if (match) {
-            name = match[1];
-        }
-    } else {
-        name = stdout.trim();
-    }
-
-    return { pid, name };
-  } catch (error) {
-    logger.warn(`No process found with PID ${pid}.`);
-    return null;
-  }
-}
-
 /**
  * Finds and kills the process running on a specific port.
  *
@@ -160,3 +129,40 @@ export async function killProcessByPort(port: number): Promise<ProcessInfo | nul
     return null;
   }
 }
+
+export async function findProcessByPid(pid: number): Promise<ProcessInfo | null> {
+    if (!pid || typeof pid !== 'number' || pid <= 0) {
+      throw new Error('Invalid PID provided.');
+    }
+
+    const platform = process.platform;
+    let command: string;
+
+    if (platform === 'win32') {
+      command = `tasklist /fi "pid eq ${pid}" /nh /fo csv`;
+    } else {
+      command = `ps -p ${pid} -o comm=`;
+    }
+
+    try {
+      const { stdout } = await execAsync(command);
+      if (!stdout.trim()) {
+        return null;
+      }
+
+      let name = null;
+      if (platform === 'win32') {
+          const match = stdout.match(/"(.*?)"/);
+          if (match) {
+              name = match[1];
+          }
+      } else {
+          name = stdout.trim();
+      }
+
+      return { pid, name };
+    } catch (error) {
+      logger.warn(`No process found with PID ${pid}.`);
+      return null;
+    }
+  }

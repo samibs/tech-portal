@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,9 +47,9 @@ export default function RecommendationsCard({ onAppRestarted }: RecommendationsC
     }, 60000);
     
     return () => clearInterval(interval);
-  }, [fetchRecommendations]);
+  }, []);
 
-  const fetchRecommendations = useCallback(async () => {
+  const fetchRecommendations = async () => {
     try {
       setLoading(true);
       const data = await getRestartRecommendations();
@@ -64,7 +64,7 @@ export default function RecommendationsCard({ onAppRestarted }: RecommendationsC
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  };
 
   const handleRestartApp = async (recommendation: RestartRecommendation) => {
     try {

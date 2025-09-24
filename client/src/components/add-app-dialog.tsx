@@ -30,9 +30,6 @@ import { Plus } from "lucide-react";
 import { insertAppSchema } from "@shared/schema";
 import { createApp } from "@/lib/api";
 import { AppType } from "@shared/schema";
-import { z } from "zod";
-
-type FormData = z.infer<typeof insertAppSchema>;
 
 interface AddAppDialogProps {
   open: boolean;
@@ -58,7 +55,7 @@ export default function AddAppDialog({
     },
   });
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
       await createApp(data);

@@ -1,5 +1,6 @@
 import { 
   AppStatus, 
+  AppType,
   InsertApp, 
   WebApp, 
   Settings, 
@@ -29,7 +30,7 @@ import {
   users,
   auditLogs
 } from "@shared/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, isNull } from "drizzle-orm";
 
 // Storage interface
 export interface IStorage {
