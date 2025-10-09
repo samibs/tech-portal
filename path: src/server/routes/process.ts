@@ -1,4 +1,3 @@
-content:
 ```typescript
 import { Router } from "express";
 import { processManager } from "../services/process-manager";
