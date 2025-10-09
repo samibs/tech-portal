@@ -1,4 +1,5 @@
 import type { Express, Request, Response } from "express";
+import { Router } from "express";
 import { createServer, type Server } from "http";
 import { z } from "zod";
 import { storage } from "./storage";
@@ -40,13 +41,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register setup routes (these don't require authentication)
   registerSetupRoutes(app);
 
+  // Create a new router for all API routes
+  const apiRouter = Router();
+
+  // Apply authentication middleware to all API routes
+  apiRouter.use(authenticateToken);
+
   // Add process monitoring routes
-  app.use("/api/process", authenticateToken, processRoutes);
+  apiRouter.use("/process", processRoutes);
 
   // API routes (now protected by authentication)
   
   // Get all apps
-  app.get("/api/apps", authenticateToken, requirePermission("apps:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/apps", requirePermission("apps:read"), async (req: Request, res: Response) => {
     try {
       const apps = await storage.getApps();
       res.json(apps);
@@ -57,7 +64,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get a single app
-  app.get("/api/apps/:id", authenticateToken, requirePermission("apps:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/apps/:id", requirePermission("apps:read"), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -77,7 +84,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create a new app
-  app.post("/api/apps", authenticateToken, requirePermission("apps:write"), async (req: Request, res: Response) => {
+  apiRouter.post("/apps", requirePermission("apps:write"), async (req: Request, res: Response) => {
     try {
       const validationResult = insertAppSchema.safeParse(req.body);
       
@@ -97,7 +104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update an app
-  app.patch("/api/apps/:id", authenticateToken, requirePermission("apps:write"), async (req: Request, res: Response) => {
+  apiRouter.patch("/apps/:id", requirePermission("apps:write"), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -118,7 +125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete an app
-  app.delete("/api/apps/:id", authenticateToken, requirePermission("apps:delete"), async (req: Request, res: Response) => {
+  apiRouter.delete("/apps/:id", requirePermission("apps:delete"), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -138,7 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get app logs
-  app.get("/api/apps/:id/logs", authenticateToken, requirePermission("logs:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/apps/:id/logs", requirePermission("logs:read"), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -154,7 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Start an app
-  app.post("/api/apps/:id/start", authenticateToken, requirePermission("apps:control"), async (req: Request, res: Response) => {
+  apiRouter.post("/apps/:id/start", requirePermission("apps:control"), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -187,7 +194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Stop an app
-  app.post("/api/apps/:id/stop", authenticateToken, requirePermission("apps:control"), async (req: Request, res: Response) => {
+  apiRouter.post("/apps/:id/stop", requirePermission("apps:control"), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -220,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Restart an app
-  app.post("/api/apps/:id/restart", authenticateToken, requirePermission("apps:control"), async (req: Request, res: Response) => {
+  apiRouter.post("/apps/:id/restart", requirePermission("apps:control"), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -253,7 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get settings
-  app.get("/api/settings", authenticateToken, requirePermission("settings:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/settings", requirePermission("settings:read"), async (req: Request, res: Response) => {
     try {
       const settings = await storage.getSettings();
       res.json(settings);
@@ -264,7 +271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update settings
-  app.patch("/api/settings", authenticateToken, requirePermission("settings:write"), async (req: Request, res: Response) => {
+  apiRouter.patch("/settings", requirePermission("settings:write"), async (req: Request, res: Response) => {
     try {
       const validationResult = updateSettingsSchema.safeParse(req.body);
       
@@ -299,7 +306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all logs
-  app.get("/api/logs", authenticateToken, requirePermission("logs:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/logs", requirePermission("logs:read"), async (req: Request, res: Response) => {
     try {
       const logs = await storage.getLogs();
       res.json(logs);
@@ -310,7 +317,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get system stats
-  app.get("/api/stats", authenticateToken, requirePermission("apps:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/stats", requirePermission("apps:read"), async (req: Request, res: Response) => {
     try {
       const apps = await storage.getApps();
       const settings = await storage.getSettings();
@@ -336,7 +343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get restart recommendations for all apps
-  app.get("/api/recommendations", authenticateToken, requirePermission("apps:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/recommendations", requirePermission("apps:read"), async (req: Request, res: Response) => {
     try {
       const recommendations = await getRestartRecommendations();
       res.json(recommendations);
@@ -347,7 +354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get restart recommendation for a specific app
-  app.get("/api/apps/:id/recommendation", authenticateToken, requirePermission("apps:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/apps/:id/recommendation", requirePermission("apps:read"), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -377,7 +384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get failure predictions for all apps
-  app.get("/api/predictions", authenticateToken, requirePermission("apps:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/predictions", requirePermission("apps:read"), async (req: Request, res: Response) => {
     try {
       const predictions = await generateAllAppPredictions();
       res.json(predictions);
@@ -388,7 +395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get failure prediction for a specific app
-  app.get("/api/apps/:id/prediction", authenticateToken, requirePermission("apps:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/apps/:id/prediction", requirePermission("apps:read"), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -420,7 +427,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ENDPOINT MANAGEMENT
   
   // Get all endpoints (optionally filtered by app)
-  app.get("/api/endpoints", authenticateToken, requirePermission("endpoints:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/endpoints", requirePermission("endpoints:read"), async (req: Request, res: Response) => {
     try {
       const appId = req.query.appId ? parseInt(req.query.appId as string) : undefined;
       const endpoints = await storage.getEndpoints(appId);
@@ -432,7 +439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get endpoints for a specific app
-  app.get("/api/apps/:id/endpoints", authenticateToken, requirePermission("endpoints:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/apps/:id/endpoints", requirePermission("endpoints:read"), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -453,7 +460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get a specific endpoint
-  app.get("/api/endpoints/:id", authenticateToken, requirePermission("endpoints:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/endpoints/:id", requirePermission("endpoints:read"), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -473,7 +480,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Create a new endpoint
-  app.post("/api/endpoints", authenticateToken, requirePermission("endpoints:write"), async (req: Request, res: Response) => {
+  apiRouter.post("/endpoints", requirePermission("endpoints:write"), async (req: Request, res: Response) => {
     try {
       const validationResult = insertEndpointSchema.safeParse(req.body);
       
@@ -499,7 +506,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Update an endpoint
-  app.patch("/api/endpoints/:id", authenticateToken, requirePermission("endpoints:write"), async (req: Request, res: Response) => {
+  apiRouter.patch("/endpoints/:id", requirePermission("endpoints:write"), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -520,7 +527,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Delete an endpoint
-  app.delete("/api/endpoints/:id", authenticateToken, requirePermission("endpoints:write"), async (req: Request, res: Response) => {
+  apiRouter.delete("/endpoints/:id", requirePermission("endpoints:write"), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -542,7 +549,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PORT MANAGEMENT
   
   // Get all ports (optionally filtered by app)
-  app.get("/api/ports", authenticateToken, requirePermission("processes:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/ports", requirePermission("processes:read"), async (req: Request, res: Response) => {
     try {
       const appId = req.query.appId ? parseInt(req.query.appId as string) : undefined;
       const ports = await storage.getPorts(appId);
@@ -554,7 +561,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get ports for a specific app
-  app.get("/api/apps/:id/ports", authenticateToken, requirePermission("processes:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/apps/:id/ports", requirePermission("processes:read"), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -575,7 +582,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Test email notifications
-  app.post("/api/email/test", authenticateToken, requirePermission("settings:write"), async (req: Request, res: Response) => {
+  apiRouter.post("/email/test", requirePermission("settings:write"), async (req: Request, res: Response) => {
     try {
       const emailAddress = req.body.email;
       
@@ -606,7 +613,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Check port availability
-  app.get("/api/ports/check/:port", authenticateToken, requirePermission("processes:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/ports/check/:port", requirePermission("processes:read"), async (req: Request, res: Response) => {
     try {
       const port = parseInt(req.params.port);
       if (isNaN(port)) {
@@ -630,7 +637,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PROCESS MANAGEMENT
   
   // Get all processes (optionally filtered by app)
-  app.get("/api/processes", authenticateToken, requirePermission("processes:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/processes", requirePermission("processes:read"), async (req: Request, res: Response) => {
     try {
       const appId = req.query.appId ? parseInt(req.query.appId as string) : undefined;
       const processes = await storage.getProcesses(appId);
@@ -642,7 +649,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get processes for a specific app
-  app.get("/api/apps/:id/processes", authenticateToken, requirePermission("processes:read"), async (req: Request, res: Response) => {
+  apiRouter.get("/apps/:id/processes", requirePermission("processes:read"), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -663,7 +670,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Terminate ghost processes for an app
-  app.post("/api/apps/:id/terminate-ghost-processes", authenticateToken, requirePermission("processes:write"), async (req: Request, res: Response) => {
+  apiRouter.post("/apps/:id/terminate-ghost-processes", requirePermission("processes:write"), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -709,6 +716,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to terminate ghost processes" });
     }
   });
+
+  // Register the API router
+  app.use("/api", apiRouter);
 
   // Create HTTP server
   const httpServer = createServer(app);
